@@ -8,16 +8,18 @@
 
 #include <PubSubClient.h>
 #include <ESP8266WiFi.h>
+#include <ArduinoJson.h>
 #include "PixelController.h"
 #include "config.h"
 
 #define kMQTT_ENDPOINT  "home/lights/kitchen"
 #define kMQTT_NODE(n)   kMQTT_ENDPOINT n
 
-WiFiClient      gWifiClient;
-PubSubClient    gMQTTClient(gWifiClient);
+WiFiClient              gWifiClient;
+PubSubClient            gMQTTClient(gWifiClient);
+StaticJsonDocument<256> gJSONDoc;
 
-extern PixelController strip;
+extern PixelController  strip;
 
 class TopicString : public String {
 public:    
@@ -37,20 +39,17 @@ void mqttCallback(char* c_topic, byte* rawPayload, unsigned int length) {
 
         topic.remove(0, lightsPath.length());
 
-        if (topic == "hue") {
-            baseColor.hue = value;
-        }
-        else if (topic == "sat") {
-            baseColor.sat = value;
-        }
-        else if (topic == "val") {
-            baseColor.val = value;
-        }
+        if (topic == "set") {
+            DeserializationError error = deserializeJson(gJSONDoc, rawPayload, length);
 
-#ifdef DEBUG
-        Serial.println(String("h: " + String(baseColor.hue, 3) + " s: " + String(baseColor.sat, 3) + " v: " + String(baseColor.val, 3)));
-#endif
-        strip.setBaseColor(baseColor);
+            if (error) {
+                Serial.print(F("deserializeJson() failed: "));
+                Serial.println(error.f_str());
+            }
+            else {
+                strip.handleJSONCommand(gJSONDoc);
+            }
+        }
     }
 }
 

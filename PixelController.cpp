@@ -16,6 +16,7 @@ PixelController::PixelController(uint16_t numPixels, int16_t pin) {
     outPin = pin;
     pixels = NULL;
     endTime = 0;
+    on = false;
 
     updateLength(numPixels);
     
@@ -33,18 +34,6 @@ PixelController::~PixelController() {
     }
 }
 
-void PixelController::updateLength(uint16_t len) {
-    free(pixels);
-
-    numBytes = len * sizeof(SPixelRec);
-    if ((pixels = (SPixelPtr)malloc(numBytes))) {
-        memset(pixels, 0, numBytes);
-        numPixels = len;
-    } else {
-        numPixels = numBytes = 0;
-    }
-}
-
 void PixelController::show() {
     if (pixels != NULL) {
         while (!canShow());
@@ -57,20 +46,51 @@ void PixelController::show() {
     }
 }
 
+void PixelController::handleJSONCommand(const JsonDocument &json) {
+    String  state = json["state"];
+    SHSVRec newColor = baseColor;
+
+    on = state == "ON";
+
+    if (json.containsKey("color")) {
+        newColor.hue = json["color"]["h"];
+        newColor.sat = ((float)json["color"]["s"] / 100.0);
+    }
+
+    if (json.containsKey("brightness")) {
+        newColor.val = ((float)json["brightness"] / 100.0);
+    }
+
+    setBaseColor(newColor);
+}
+
+void PixelController::updateLength(uint16_t len) {
+    free(pixels);
+
+    numBytes = len * sizeof(SPixelRec);
+    if ((pixels = (SPixelPtr)malloc(numBytes))) {
+        memset(pixels, 0, numBytes);
+        numPixels = len;
+    } else {
+        numPixels = numBytes = 0;
+    }
+}
+
 SHSVRec PixelController::getBaseColor() {
     return baseColor;
 }
 
 void PixelController::setBaseColor(SHSVRec color) {
     SPixelRec   pixel = ColorUtils::HSVtoPixel(color);
+    uint32_t    rgbw = on ? pixel.rgbw : 0x00000000;
 
 #ifdef DEBUG
-    Serial.println(String("r: " + String(pixel.comp.r) + " g: " + String(pixel.comp.g) + " g: " + String(pixel.comp.b) + " w: " + String(pixel.comp.w)));
+    Serial.println(String("rgbw: " + String(rgbw, HEX)));
 #endif
 
     baseColor = color;
     for (int i=0; i<numPixels; i++) {
-        pixels[i].rgbw = pixel.rgbw;
+        pixels[i].rgbw = rgbw;
     }
 
     show();
