@@ -79,7 +79,6 @@ void PixelController::handleJSONCommand(const JsonDocument &json) {
 
     if (isOn != newState) {
         isOn = newState;
-Serial.println(String("isOn: " + String(isOn) + " dur: " + String(transition)));
         if (transition == 0.0) {
             setBaseColor(newColor);
         }
