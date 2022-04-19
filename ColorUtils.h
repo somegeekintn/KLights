@@ -13,10 +13,10 @@
 
 typedef union {
     struct __attribute__((__packed__)) {
-        uint8_t     grn;
-        uint8_t     red;
-        uint8_t     blu;
-        uint8_t     wht;
+        uint8_t     g;
+        uint8_t     r;
+        uint8_t     b;
+        uint8_t     w;
     } comp;
     uint32_t    rgbw;
 } SPixelRec, *SPixelPtr;

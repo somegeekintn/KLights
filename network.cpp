@@ -8,18 +8,14 @@
 
 #include <PubSubClient.h>
 #include <ESP8266WiFi.h>
-
 #include "PixelController.h"
 #include "config.h"
 
 #define kMQTT_ENDPOINT  "home/lights/kitchen"
 #define kMQTT_NODE(n)   kMQTT_ENDPOINT n
 
-#define MSG_BUF_LEN     96
-
 WiFiClient      gWifiClient;
 PubSubClient    gMQTTClient(gWifiClient);
-char            gMsgBuffer[MSG_BUF_LEN];
 
 extern PixelController strip;
 
@@ -50,13 +46,10 @@ void mqttCallback(char* c_topic, byte* rawPayload, unsigned int length) {
         else if (topic == "val") {
             baseColor.val = value;
         }
-        else if (topic == "opt") {
-            strip.setColorOption(payload.toInt());
-        }
 
-        Serial.print("hue: "); Serial.print(baseColor.hue, 3);
-        Serial.print(" sat: "); Serial.print(baseColor.sat, 3);
-        Serial.print(" val: "); Serial.println(baseColor.val, 3);
+#ifdef DEBUG
+        Serial.println(String("h: " + String(baseColor.hue, 3) + " s: " + String(baseColor.sat, 3) + " v: " + String(baseColor.val, 3)));
+#endif
         strip.setBaseColor(baseColor);
     }
 }
@@ -70,8 +63,7 @@ void mqttReconnect() {
             gMQTTClient.publish(kMQTT_NODE("/avail"), "online", true);
             gMQTTClient.subscribe(kMQTT_NODE("/#"));
         } else {
-            snprintf(gMsgBuffer, MSG_BUF_LEN, "failed, rc=%d try again in 5 seconds", gMQTTClient.state());
-            Serial.println(gMsgBuffer);
+            Serial.println(String("failed, rc=" + String(gMQTTClient.state()) + " try again in 5 seconds"));
 
             delay(5000);
         }

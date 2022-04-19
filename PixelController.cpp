@@ -16,7 +16,6 @@ PixelController::PixelController(uint16_t numPixels, int16_t pin) {
     outPin = pin;
     pixels = NULL;
     endTime = 0;
-    option = 0;
 
     updateLength(numPixels);
     
@@ -44,10 +43,6 @@ void PixelController::updateLength(uint16_t len) {
     } else {
         numPixels = numBytes = 0;
     }
-
-    for (int i=0; i<numPixels; i++) {
-        pixels[i].comp.red = 0x40;
-    }
 }
 
 void PixelController::show() {
@@ -62,23 +57,16 @@ void PixelController::show() {
     }
 }
 
-void PixelController::setColorOption(int opt) {
-    option = opt;
-
-    setBaseColor(baseColor);
-}
-
 SHSVRec PixelController::getBaseColor() {
     return baseColor;
 }
 
 void PixelController::setBaseColor(SHSVRec color) {
-    SPixelRec   pixel = option == 0 ? ColorUtils::HSVtoPixel(color) : ColorUtils::HSVtoPixel_Slow(color);
+    SPixelRec   pixel = ColorUtils::HSVtoPixel(color);
 
-    Serial.print("red: "); Serial.print(pixel.comp.red);
-    Serial.print(" grn: "); Serial.print(pixel.comp.grn);
-    Serial.print(" blu: "); Serial.print(pixel.comp.blu);
-    Serial.print(" wht: "); Serial.println(pixel.comp.wht);
+#ifdef DEBUG
+    Serial.println(String("r: " + String(pixel.comp.r) + " g: " + String(pixel.comp.g) + " g: " + String(pixel.comp.b) + " w: " + String(pixel.comp.w)));
+#endif
 
     baseColor = color;
     for (int i=0; i<numPixels; i++) {

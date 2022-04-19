@@ -19,7 +19,6 @@ public:
     void updateLength(uint16_t len);
     void show();
 
-    void setColorOption(int opt);
     SHSVRec getBaseColor();
     void setBaseColor(SHSVRec color);
 
@@ -41,7 +40,6 @@ protected:
     uint32_t    endTime;    // Latch timing reference
 
     SHSVRec     baseColor;
-    int16_t     option;
 };
 
 #endif

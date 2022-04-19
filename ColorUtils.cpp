@@ -65,10 +65,10 @@ SPixelRec ColorUtils::HSVtoPixel(SHSVRec hsv) {
         b = 1.0 - fabs(fmodf(h1 - 1.0, 2.0) - 1.0);
     }
 
-    pixel.comp.red = round(r * cMult);
-    pixel.comp.grn = round(g * cMult);
-    pixel.comp.blu = round(b * cMult);
-    pixel.comp.wht = round(lG * (1.0 - adjSat) * 255.0);
+    pixel.comp.r = round(r * cMult);
+    pixel.comp.g = round(g * cMult);
+    pixel.comp.b = round(b * cMult);
+    pixel.comp.w = round(lG * (1.0 - adjSat) * 255.0);
 
     return pixel;
 }
@@ -96,10 +96,10 @@ SPixelRec ColorUtils::HSVtoPixel_Slow(SHSVRec hsv) {
         b = 1.0 - fabs(fmodf(h1 - 1.0, 2.0) - 1.0);
     }
 
-    pixel.comp.red = round(r * cMult);
-    pixel.comp.grn = round(g * cMult);
-    pixel.comp.blu = round(b * cMult);
-    pixel.comp.wht = round(lG * (1.0 - adjSat) * 255.0);
+    pixel.comp.r = round(r * cMult);
+    pixel.comp.g = round(g * cMult);
+    pixel.comp.b = round(b * cMult);
+    pixel.comp.w = round(lG * (1.0 - adjSat) * 255.0);
 
     return pixel;
 }
