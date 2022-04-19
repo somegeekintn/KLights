@@ -103,3 +103,15 @@ SPixelRec ColorUtils::HSVtoPixel_Slow(SHSVRec hsv) {
 
     return pixel;
 }
+
+SHSVRec ColorUtils::mix(SHSVRec x, SHSVRec y, float a) {
+    SHSVRec mixed;
+
+    mixed.hue = x.hue * (1.0 - a) + y.hue * a;
+    mixed.sat = x.sat * (1.0 - a) + y.sat * a;
+    mixed.val = x.val * (1.0 - a) + y.val * a;
+
+    return mixed;
+}
+
+SHSVRec ColorUtils::color_black = { 0.0, 0.0, 0.0 };

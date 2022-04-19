@@ -26,7 +26,14 @@ void setup() {
 }
 
 void loop() {
-    loop_network();
+    unsigned long    nextTime = millis() + 16;   // how's ~60fps sound?
+    unsigned long    now;
 
-    delay(15);
+    loop_network();
+    strip.loop();
+
+    now = millis();
+    if (now < nextTime) {
+        delay(nextTime - now);
+    }
 }

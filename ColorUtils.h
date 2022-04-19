@@ -32,6 +32,10 @@ public:
     static SPixelRec HSVtoPixel(SHSVRec hsv);
     static SPixelRec HSVtoPixel_Slow(SHSVRec hsv);
     static uint32_t ColorHSV(uint16_t hue, uint8_t sat, uint8_t val);
+
+    static SHSVRec mix(SHSVRec x, SHSVRec y, float a);
+
+    static SHSVRec color_black;
 };
 
 #endif
