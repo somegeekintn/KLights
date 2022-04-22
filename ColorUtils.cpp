@@ -11,7 +11,7 @@
 // 201-step brightness table: gamma = 2.2
 // From: 0.000 - 1.000 stepping by 0.005
 
-const float gamma_table[201] = {
+static const float PROGMEM gamma_table[201] = {
     0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.001, 0.001, 0.001, 0.001, 0.002, 0.002, 0.002, 0.003, 0.003,
     0.004, 0.004, 0.005, 0.006, 0.006, 0.007, 0.008, 0.009, 0.009, 0.01, 0.011, 0.012, 0.013, 0.014, 0.015, 0.017,
     0.018, 0.019, 0.02, 0.022, 0.023, 0.024, 0.026, 0.027, 0.029, 0.031, 0.032, 0.034, 0.036, 0.038, 0.039, 0.041,
@@ -30,7 +30,7 @@ const float gamma_table[201] = {
 // 201-step saturation table table: pow(1/3)
 // From: 0.000 - 1.000 stepping by 0.005
 
-const float saturation_table[201] = {
+static const float PROGMEM saturation_table[256] = {
     0.0, 0.171, 0.215, 0.247, 0.271, 0.292, 0.311, 0.327, 0.342, 0.356, 0.368, 0.38, 0.391, 0.402, 0.412, 0.422,
     0.431, 0.44, 0.448, 0.456, 0.464, 0.472, 0.479, 0.486, 0.493, 0.5, 0.507, 0.513, 0.519, 0.525, 0.531, 0.537,
     0.543, 0.548, 0.554, 0.559, 0.565, 0.57, 0.575, 0.58, 0.585, 0.59, 0.594, 0.599, 0.604, 0.608, 0.613, 0.617,
@@ -50,8 +50,8 @@ SPixelRec ColorUtils::HSVtoPixel(SHSVRec hsv) {
     float       h1 = hsv.hue / 120.0;
     float       h2 = fmodf(h1 + 1.0, 3.0);
     float       r = 0.0, g = 0.0, b = 0.0;
-    float       lG = gamma_table[(int)(hsv.val * 200.0 + 0.001)];
-    float       adjSat = saturation_table[(int)(hsv.sat * 200.0 + 0.001)];
+    float       lG = pgm_read_float(&gamma_table[(int)(hsv.val * 200.0 + 0.001)]);
+    float       adjSat = pgm_read_float(&saturation_table[(int)(hsv.sat * 200.0 + 0.001)]);
     float       cMult = lG * adjSat * 255.0;
     SPixelRec   pixel;
 
