@@ -1,7 +1,16 @@
+//
+//  NetworkMgr.cpp
+//  KLights
+//
+//  Created by Casey Fleser on 04/22/2022.
+//  Copyright © 2022 Casey Fleser. All rights reserved.
+//
+
 #include "NetworkMgr.h"
-#include <ArduinoJson.h>
 #include "PixelController.h"
 #include "config.h"
+
+#include <ArduinoJson.h>
 
 #define kMQTT_ENDPOINT  "home/lights/kitchen"
 #define kMQTT_NODE(n)   kMQTT_ENDPOINT n
@@ -20,6 +29,8 @@ void NetworkMgr::setup() {
     setupWifi();
     setupTime();
     setupMQTT();
+
+    webServer.setup();
 }
 
 void NetworkMgr::setupWifi() {
@@ -33,8 +44,7 @@ void NetworkMgr::setupWifi() {
         Serial.print(".");
     }
 
-    Serial.println("");
-    Serial.print(F("WiFi connected @ : ")); Serial.println(WiFi.localIP());
+    Serial.print(F("\nWiFi connected @ : ")); Serial.println(WiFi.localIP());
 }
 
 void NetworkMgr::setupTime() {
@@ -53,7 +63,7 @@ void NetworkMgr::setupTime() {
         Serial.println(F("Failed to set current time"));
     }
     else {
-        Serial.println(F("Time: ") + String(ctime(&now)));
+        Serial.print(F("Time: ") + String(ctime(&now)));
     }
 }
 
@@ -64,6 +74,8 @@ void NetworkMgr::setupMQTT() {
 
 void NetworkMgr::loop() {
     loopMQTT();
+
+    webServer.loop();
 }
 
 void NetworkMgr::loopMQTT() {
@@ -75,7 +87,7 @@ void NetworkMgr::loopMQTT() {
 
 void NetworkMgr::mqttReconnect() {
     while (!mqttClient.connected()) {
-        Serial.print("Attempting MQTT connection...");
+        Serial.print(F("Attempting MQTT connection... "));
 
         if (mqttClient.connect(kMQTT_CLIENT, kMQTT_USER, kMQTT_PASS, kMQTT_NODE("/avail"), 2, false, "offline")) {
             Serial.print(F("MQTT connected, endpoint: ")); Serial.println(kMQTT_ENDPOINT);

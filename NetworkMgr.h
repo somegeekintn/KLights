@@ -1,9 +1,18 @@
+//
+//  NetworkMgr.h
+//  KLights
+//
+//  Created by Casey Fleser on 04/22/2022.
+//  Copyright © 2022 Casey Fleser. All rights reserved.
+//
+
 #ifndef NetworkMgr_h
 #define NetworkMgr_h
 
 #include <Arduino.h>
 #include <PubSubClient.h>
 #include <ESP8266WiFi.h>
+#include "ServerMgr.h"
 
 class NetworkMgr {
 public:
@@ -25,6 +34,7 @@ protected:
 
     WiFiClient              wifiClient;
     PubSubClient            mqttClient;
+    ServerMgr               webServer;
 };
 
 #endif
