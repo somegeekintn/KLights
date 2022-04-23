@@ -20,6 +20,8 @@ public:
     void loop();
 
 protected:
+    void handleFileList();
+    void handleSysInfo();
     void handleBasicUpload();
     void handleRedirect();
     void handleNotFound();

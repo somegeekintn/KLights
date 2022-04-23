@@ -91,19 +91,17 @@ public:
             fName = "/" + fName;
         }
 
-        if (requestMethod == HTTP_POST) {
-            // all done in upload. no other forms.
-        } else if (requestMethod == HTTP_DELETE) {
+        // HTTP_POST done in upload. no other forms.
+        if (requestMethod == HTTP_DELETE) {
             if (LittleFS.exists(fName)) {
                 LittleFS.remove(fName);
             }
-        } // if
+        }
 
         server.send(200); // all done.
         return (true);
-    } // handle()
+    }
 
-    // uploading process
     void upload(ESP8266WebServer UNUSED& server, const String UNUSED& _requestUri, HTTPUpload& upload) override {
         // ensure that filename starts with '/'
         String fName = upload.filename;
@@ -138,9 +136,9 @@ void ServerMgr::setup() {
     server.on("/minup.html", [this]() { this->handleBasicUpload(); });
     server.on("/", HTTP_GET, [this]() { this->handleRedirect(); });
 
-    // // register some REST services
-    // server->on("/$list", HTTP_GET, handleListFiles);
-    // server->on("/$sysinfo", HTTP_GET, handleSysInfo);
+    // register some REST services
+    server.on("/$fs", HTTP_GET, [this]() { this->handleFileList(); });
+    server.on("/$sysinfo", HTTP_GET, [this]() { this->handleSysInfo(); });
 
     server.addHandler(new FileServerHandler());
 
@@ -155,13 +153,50 @@ void ServerMgr::loop() {
     server.handleClient();
 }
 
+void ServerMgr::handleFileList() {
+    Dir     dir = LittleFS.openDir("/");
+    String  result;
+
+    result += "[\n";
+    while (dir.next()) {
+        if (result.length() > 4) {
+            result += ",";
+        }
+        result += "  {";
+        result += " \"name\": \"" + dir.fileName() + "\", ";
+        result += " \"size\": " + String(dir.fileSize()) + ", ";
+        result += " \"time\": " + String(dir.fileTime());
+        result += " }\n";
+    }
+    result += "]";
+    server.sendHeader("Cache-Control", "no-cache");
+    server.send(200, F("application/json; charset=utf-8"), result);
+}
+
+void ServerMgr::handleSysInfo() {
+    String result;
+
+    FSInfo fs_info;
+    LittleFS.info(fs_info);
+
+    result += "{\n";
+    result += "  \"flashSize\": " + String(ESP.getFlashChipSize()) + ",\n";
+    result += "  \"freeHeap\": " + String(ESP.getFreeHeap()) + ",\n";
+    result += "  \"fsTotalBytes\": " + String(fs_info.totalBytes) + ",\n";
+    result += "  \"fsUsedBytes\": " + String(fs_info.usedBytes) + ",\n";
+    result += "  \"upTime\": " + String(millis() / 1000) + "\n";
+    result += "}";
+
+    server.sendHeader("Cache-Control", "no-cache");
+    server.send(200, F("application/json; charset=utf-8"), result);
+}
+
 void ServerMgr::handleBasicUpload() {
     server.send(200, "text/html", FPSTR(uploadContent));
 }
 
-// Called when on request without filename. 
-// This will redirect to the file index.html if it exists, 
-// otherwise to the built-in minup.html page
+// Called on request without filename. This will redirect to the file 
+// index.html if it exists, otherwise to the built-in minup.html page
 
 void ServerMgr::handleRedirect() {
     String url(F("/index.html"));
