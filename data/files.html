@@ -1,12 +1,43 @@
-<!DOCTYPE html>
-<html>
+<!DOCTYPE html><html>
 <head>
-    <title>LittleFS Files</title>
-    <link Content-Type="text/css" href="/style.css" rel="stylesheet" />
+    <title>LittleFS File List</title>
+    <link Content-Type="text/css" href="style.css" rel="stylesheet" />
+    <link rel="stylesheet" href="https://use.fontawesome.com/releases/v6.1.1/css/all.css">
 </head>
+
 <body>
-    <h1>LittleFS Files</h1>
-    <div id="fslist">
+    <div class="container">
+        <div class="sidebar">
+            <ul>
+                <li>
+                    <a href="/index.html">
+                        <span class="icon"><i class="fas fa-home"></i></span>
+                        <span class="item">Home</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="/files.html" class="active">
+                        <span class="icon"><i class="fas fa-folder-tree"></i></span>
+                        <span class="item">Files</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="/minup.html">
+                        <span class="icon"><i class="fas fa-file-arrow-up"></i></span>
+                        <span class="item">Upload (basic)</span>
+                    </a>
+                </li>
+            </ul>
+        </div>
+
+        <div class="header">
+            <div class="littlefs-image"></div>
+            <h1>LittleFS File List</h1>
+        </div>
+
+        <div class="content">
+            <div class="mono" id="fslist"></div>
+        </div>
     </div>
 
     <script>
@@ -55,7 +86,6 @@
                 }
             };
         });
-
     </script>
 </body>
 </html>

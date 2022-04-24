@@ -1,23 +1,48 @@
 <!DOCTYPE html><html>
 <head>
-    <title>NodeMCU Home</title>
-    <link Content-Type="text/css" href="/style.css" rel="stylesheet" />
+    <title>ESP Monitor</title>
+    <link Content-Type="text/css" href="style.css" rel="stylesheet" />
+    <link rel="stylesheet" href="https://use.fontawesome.com/releases/v6.1.1/css/all.css">
 </head>
 
 <body>
-    <h1>NodeMCU Home</h1>
+    <div class="container">
+        <div class="sidebar">
+            <ul>
+                <li>
+                    <a href="#" class="active">
+                        <span class="icon"><i class="fas fa-home"></i></span>
+                        <span class="item">Home</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="/files.html">
+                        <span class="icon"><i class="fas fa-folder-tree"></i></span>
+                        <span class="item">Files</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="/minup.html">
+                        <span class="icon"><i class="fas fa-file-arrow-up"></i></span>
+                        <span class="item">Upload (basic)</span>
+                    </a>
+                </li>
+            </ul>
+        </div>
 
-    <p>The following pages are available:</p>
-    <ul>
-        <li><a href="/index.html">/index.html</a> - This page</li>
-        <li><a href="/files.html">/files.html</a> - Manage files on the server</li>
-        <li><a href="/minup.htm">/minup.htm</a> - Minimal file upload utility</a></li>
-    </ul>
+        <div class="header">
+            <div class="wifi-image"></div>
+            <h1>ESP Monitor</h1>
+        </div>
 
-    <p>The following REST services are available:</p>
-    <ul>
-        <li><a href="/$sysinfo">/$sysinfo</a> - Some system level information</a></li>
-        <li><a href="/$fs">/$fs</a> - Array of all files</a></li>
-    </ul>
+        <div class="content">
+            <p>Some sort of overview goes here eventually.</p>
+            <div>Rest Services:</div>
+            <ul>
+                <li><a href="/$sysinfo">/$sysinfo</a> - Some system level information</a></li>
+                <li><a href="/$fs">/$fs</a> - Array of all files</a></li>
+            </ul>
+        </div>
+    </div>
 </body>
 </html>
