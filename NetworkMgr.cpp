@@ -15,7 +15,7 @@
 #define kMQTT_ENDPOINT  "home/lights/kitchen"
 #define kMQTT_NODE(n)   kMQTT_ENDPOINT n
 
-#define kTIMEZONE       "America/Chicago"
+#define kTIMEZONE       "CST6CDT,M3.2.0/2:00:00,M11.1.0/2:00:00" 
 #define kEPOCH_01012022 1640995200
 
 StaticJsonDocument<256> gJSONDoc;
@@ -90,7 +90,7 @@ void NetworkMgr::mqttReconnect() {
         Serial.print(F("Attempting MQTT connection... "));
 
         if (mqttClient.connect(kMQTT_CLIENT, kMQTT_USER, kMQTT_PASS, kMQTT_NODE("/avail"), 2, false, "offline")) {
-            Serial.print(F("MQTT connected, endpoint: ")); Serial.println(kMQTT_ENDPOINT);
+            Serial.print(F(" connected to: ")); Serial.println(kMQTT_ENDPOINT);
             mqttClient.publish(kMQTT_NODE("/avail"), "online", true);
             mqttClient.subscribe(kMQTT_NODE("/#"));
         } else {

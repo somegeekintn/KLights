@@ -7,7 +7,6 @@
 //
 
 #include "ServerMgr.h"
-
 #include <LittleFS.h>
 
 static const char notFoundContent[] PROGMEM = 
@@ -55,33 +54,24 @@ R"==(<!doctype html><html lang='en'>
 </body>
 )==";
 
-#define UNUSED __attribute__((unused))
+#define PROJECT_TITLE   "KLights"
+#define BUILD_TIME      __DATE__" "__TIME__
 
 class FileServerHandler : public RequestHandler {
 public:
-    // @brief Construct a new File Server Handler object
-    // @param fs The file system to be used.
-    // @param path Path to the root folder in the file system that is used for
-    // serving static data down and upload.
-    // @param cache_header Cache Header to be used in replies.
     FileServerHandler() { }
 
-    // @brief check incoming request. Can handle POST for uploads and DELETE.
-    // @param requestMethod method of the http request line.
-    // @param requestUri request ressource from the http request line.
-    // @return true when method can be handled.
-    bool canHandle(HTTPMethod requestMethod, const String UNUSED& _uri) override {
-        return ((requestMethod == HTTP_POST) || (requestMethod == HTTP_DELETE));
-    } // canHandle()
+    bool canHandle(HTTPMethod requestMethod, const String &uri) override {
+        return (requestMethod == HTTP_POST) || (requestMethod == HTTP_DELETE);
+    }
 
-    bool canUpload(const String& uri) override {
-        // only allow upload on root fs level.
-        return (uri == "/");
-    } // canUpload()
+    bool canUpload(const String &uri) override {
+        return uri == "/";     // currently only allow upload on root fs level.
+    }
 
-    bool handle(ESP8266WebServer& server, HTTPMethod requestMethod, const String& requestUri) override {
-        // ensure that filename starts with '/'
+    bool handle(ESP8266WebServer &server, HTTPMethod requestMethod, const String &requestUri) override {
         String fName = requestUri;
+
         if (!fName.startsWith("/")) {
             fName = "/" + fName;
         }
@@ -93,12 +83,12 @@ public:
             }
         }
 
-        server.send(200); // all done.
-        return (true);
+        server.send(200);
+
+        return true;
     }
 
-    void upload(ESP8266WebServer UNUSED& server, const String UNUSED& _requestUri, HTTPUpload& upload) override {
-        // ensure that filename starts with '/'
+    void upload(ESP8266WebServer &server, const String &requestUri, HTTPUpload &upload) override {
         String fName = upload.filename;
         if (!fName.startsWith("/")) {
             fName = "/" + fName;
@@ -109,11 +99,13 @@ public:
                 LittleFS.remove(fName);
             } // if
             _fsUploadFile = LittleFS.open(fName, "w");
-        } else if (upload.status == UPLOAD_FILE_WRITE) {
+        } 
+        else if (upload.status == UPLOAD_FILE_WRITE) {
             if (_fsUploadFile) {
                 _fsUploadFile.write(upload.buf, upload.currentSize);
             }
-        } else if (upload.status == UPLOAD_FILE_END) {
+        } 
+        else if (upload.status == UPLOAD_FILE_END) {
             if (_fsUploadFile) {
                 _fsUploadFile.close();
             }
@@ -128,13 +120,17 @@ ServerMgr::ServerMgr() {
 }
 
 void ServerMgr::setup() {
+    bootTime = time(NULL);
+
     server.on("/minup.html", [this]() { this->handleBasicUpload(); });
     server.on("/", HTTP_GET, [this]() { this->handleRedirect(); });
+
+    // OTA Update handler
+    httpUpdater.setup(&server, "/otaupdate");
 
     // register some REST services
     server.on("/$fs", HTTP_GET, [this]() { this->handleFileList(); });
     server.on("/$sysinfo", HTTP_GET, [this]() { this->handleSysInfo(); });
-
     server.addHandler(new FileServerHandler());
 
     server.serveStatic("/", LittleFS, "/");
@@ -145,6 +141,11 @@ void ServerMgr::setup() {
 }
 
 void ServerMgr::loop() {
+    // Note: Made changes to streamFile in ESP8266WebServer.h to use file.sendSize instead of
+    // file.sendAll which can delay up to 1 second waiting for Stream (aka File) to make more
+    // data available to send. Probably I should figure out how to send a PR to the good folks
+    // at https://github.com/esp8266/Arduino
+
     server.handleClient();
 }
 
@@ -169,17 +170,28 @@ void ServerMgr::handleFileList() {
 }
 
 void ServerMgr::handleSysInfo() {
-    String result;
+    String  result;
+    FSInfo  fs_info;
+    time_t  now = time(NULL);
 
-    FSInfo fs_info;
+    
     LittleFS.info(fs_info);
 
     result += "{\n";
+    result += "  \"project\": \"" + String(PROJECT_TITLE) + "\",\n";
+    result += "  \"buildTime\": \"" + String(BUILD_TIME) + "\",\n";
+    result += "  \"versionSDK\": \"" + String(ESP.getSdkVersion()) + "\",\n";
+    result += "  \"versionCore\": \"" + ESP.getCoreVersion() + "\",\n";
+    result += "  \"versionFull\": \"" + ESP.getFullVersion() + "\",\n";
+    result += "  \"versionBoot\": " + String(ESP.getBootVersion()) + ",\n";
     result += "  \"flashSize\": " + String(ESP.getFlashChipSize()) + ",\n";
     result += "  \"freeHeap\": " + String(ESP.getFreeHeap()) + ",\n";
+    result += "  \"sketchSize\": " + String(ESP.getSketchSize()) + ",\n";
+    result += "  \"sketchSpace\": " + String(ESP.getFreeSketchSpace()) + ",\n";
     result += "  \"fsTotalBytes\": " + String(fs_info.totalBytes) + ",\n";
     result += "  \"fsUsedBytes\": " + String(fs_info.usedBytes) + ",\n";
-    result += "  \"upTime\": " + String(millis() / 1000) + "\n";
+    result += "  \"bootTime\": " + String(bootTime) + ",\n";
+    result += "  \"curTime\": " + String(now) + "\n";
     result += "}";
 
     server.sendHeader("Cache-Control", "no-cache");

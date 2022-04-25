@@ -11,6 +11,7 @@
 
 #include <Arduino.h>
 #include <ESP8266WebServer.h>
+#include <ESP8266HTTPUpdateServer.h>
 
 class ServerMgr {
 public:
@@ -26,7 +27,9 @@ protected:
     void handleRedirect();
     void handleNotFound();
 
-    ESP8266WebServer    server;
+    ESP8266WebServer        server;
+    ESP8266HTTPUpdateServer httpUpdater;
+    time_t                  bootTime;
 };
 
 #endif

@@ -9,34 +9,21 @@
     <div class="container">
         <div class="sidebar">
             <ul>
-                <li>
-                    <a href="#" class="active">
-                        <span class="icon"><i class="fas fa-home"></i></span>
-                        <span class="item">Home</span>
-                    </a>
-                </li>
-                <li>
-                    <a href="/files.html">
-                        <span class="icon"><i class="fas fa-folder-tree"></i></span>
-                        <span class="item">Files</span>
-                    </a>
-                </li>
-                <li>
-                    <a href="/minup.html">
-                        <span class="icon"><i class="fas fa-file-arrow-up"></i></span>
-                        <span class="item">Upload (basic)</span>
-                    </a>
-                </li>
+                <li><a href="#" class="active"><span class="icon"><i class="fas fa-home"></i></span><span class="item">Home</span></a></li>
+                <li><a href="/files.html"><span class="icon"><i class="fas fa-folder-tree"></i></span><span class="item">Files</span></a></li>
+                <li><a href="/update.html"><span class="icon"><i class="fas fa-upload"></i></span><span class="item">OTA Update</span></a></li>
+                <li><a href="/minup.html"><span class="icon"><i class="fas fa-file-arrow-up"></i></span><span class="item">Upload (basic)</span></a></li>
             </ul>
         </div>
 
         <div class="header">
             <div class="wifi-image"></div>
-            <h1>ESP Monitor</h1>
+            <h1 id="home_title">ESP Monitor</h1>
         </div>
 
         <div class="content">
-            <p>Some sort of overview goes here eventually.</p>
+            <div>System Info</div>
+            <div id="sysinfo" class="mono"></div>
             <div>Rest Services:</div>
             <ul>
                 <li><a href="/$sysinfo">/$sysinfo</a> - Some system level information</a></li>
@@ -44,5 +31,32 @@
             </ul>
         </div>
     </div>
-</body>
+
+    <script>
+        window.addEventListener("load", function () {
+            fetch('/$sysinfo')
+                .then(function (result) { return result.json(); })
+                .then(function (json) {
+                    var listObj = document.querySelector('#sysinfo');
+                    var titleObj = document.querySelector('#home_title');
+                    var project = json["project"];
+
+                    if (project) {
+                        title = document.querySelector('#home_title')
+                        title.innerHTML = project + ": ESP Monitor";
+                    }
+
+                    Object.entries(json).forEach(function ([key, value]) {
+                        var entry = document.createElement("div");
+
+                        entry.innerHTML = key + ": " + value;
+                        listObj.appendChild(entry)
+                    });
+                })
+                .catch(function (err) {
+                    window.alert(err);
+                });
+        });
+    </script>
+    </body>
 </html>
