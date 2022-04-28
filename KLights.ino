@@ -7,14 +7,17 @@
 //
 
 #include "PixelController.h"
+#include "ColorUtils.h"
 #include "NetworkMgr.h"
 #include <LittleFS.h>
 
-#define LED_PIN         D1
-#define LED_COUNT       300
+// #define LED_PIN         D1
+// #define LED_COUNT       200
 
-PixelController gStrip(LED_COUNT, LED_PIN);
+PixelController gStrip1(72, D1);
+PixelController gStrip2(148, D2);
 NetworkMgr      gNetworkMgr;
+bool            gHeartbeat = false;
 
 void setup() {
     Serial.begin(115200);
@@ -23,19 +26,34 @@ void setup() {
         Serial.print(F("Failed to mount filesystem (LittleFS)"));
     }
 
+    gStrip1.setStatusPixel(SHSVRec(0.0, 1.0, 0.10));     // red, calls show
+    gStrip2.setStatusPixel(SHSVRec(0.0, 1.0, 0.10));
     gNetworkMgr.setup();
-    gStrip.show();
 }
 
 void loop() {
-    unsigned long    nextTime = millis() + 16;   // how's ~60fps sound?
-    unsigned long    now;
+    time_t          now = time(NULL);
+    unsigned long   nextTime = millis() + 16;   // how's ~60fps sound?
+    unsigned long   milliNow;
 
     gNetworkMgr.loop();
-    gStrip.loop();
+    gStrip1.loop();
+    gStrip2.loop();
 
-    now = millis();
-    if (now < nextTime) {
-        delay(nextTime - now);
+    if (!(now % 10)) {
+        if (!gHeartbeat) {
+            gStrip1.show();
+            gStrip2.setStatusPixel(SHSVRec(240.0, 1.0, 0.10));
+            gHeartbeat = true;
+        }
+    }
+    else if (gHeartbeat) {
+        gStrip2.setStatusPixel(SHSVRec(180.0, 1.0, 0.10));
+        gHeartbeat = false;
+    }
+
+    milliNow = millis();
+    if (milliNow < nextTime) {
+        delay(nextTime - milliNow);
     }
 }

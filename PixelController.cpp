@@ -59,6 +59,12 @@ void PixelController::loop() {
     }
 }
 
+void PixelController::setStatusPixel(SHSVRec color) {
+    pixels[0].rgbw = ColorUtils::HSVtoPixel(color).rgbw;
+
+    show();
+}
+
 void PixelController::handleJSONCommand(const JsonDocument &json) {
     String  state = json["state"];
     SHSVRec newColor = baseColor;
@@ -83,7 +89,7 @@ void PixelController::handleJSONCommand(const JsonDocument &json) {
             setBaseColor(newColor);
         }
         else {
-            SHSVRec offColor = { baseColor.hue, baseColor.sat, 0.0 };
+            SHSVRec offColor(baseColor.hue, baseColor.sat, 0.0);
 
             transBeginColor = isOn ? offColor : baseColor;
             transEndColor = isOn ? baseColor : offColor;
@@ -128,7 +134,7 @@ void PixelController::setBaseColor(SHSVRec color) {
 }
 
 void PixelController::setPixels(uint32_t rgbw) {
-    for (int i=0; i<numPixels; i++) {
+    for (int i=1; i<numPixels; i++) {
         pixels[i].rgbw = rgbw;
     }
     show();

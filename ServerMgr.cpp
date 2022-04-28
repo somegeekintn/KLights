@@ -7,6 +7,7 @@
 //
 
 #include "ServerMgr.h"
+#include "PixelController.h"
 #include <LittleFS.h>
 
 static const char notFoundContent[] PROGMEM = 
@@ -55,7 +56,10 @@ R"==(<!doctype html><html lang='en'>
 )==";
 
 #define PROJECT_TITLE   "KLights"
-#define BUILD_TIME      __DATE__" "__TIME__
+#define BUILD_TIME      __DATE__ " " __TIME__
+
+extern PixelController  gStrip1;
+extern PixelController  gStrip2;
 
 class FileServerHandler : public RequestHandler {
 public:
@@ -127,6 +131,22 @@ void ServerMgr::setup() {
 
     // OTA Update handler
     httpUpdater.setup(&server, "/otaupdate");
+    // Note: this required a change to Updater.cpp as writeStream calls the progress handler
+    // but not write. Consider creating an HTTP updater that contains its own progress handler
+    Update.onProgress([](size_t progress, size_t len) {
+        if (progress == 0) {
+            SHSVRec purple(270.0, 1.0, 0.10);
+
+            gStrip1.setStatusPixel(purple);
+            gStrip2.setStatusPixel(purple);
+        }
+        else {
+            SHSVRec purple(270.0, 1.0, (float)progress / (float)len);
+
+            gStrip1.setStatusPixel(purple);
+            gStrip2.setStatusPixel(purple);
+        }
+    });
 
     // register some REST services
     server.on("/$fs", HTTP_GET, [this]() { this->handleFileList(); });

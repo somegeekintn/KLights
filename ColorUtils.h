@@ -21,10 +21,13 @@ typedef union {
     uint32_t    rgbw;
 } SPixelRec, *SPixelPtr;
 
-typedef struct {
+typedef struct SHSVRec {
     float       hue;
     float       sat;
     float       val;
+
+    SHSVRec() { hue = 0.0; sat = 0.0; val = 0.0; }
+    SHSVRec(float inHue, float inSat, float inVal) { hue = inHue; sat = inSat; val = inVal; }
 } SHSVRec;
 
 class ColorUtils {

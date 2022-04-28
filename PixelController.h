@@ -24,6 +24,7 @@ public:
 
     void show();
     void loop();
+    void setStatusPixel(SHSVRec color);
     void handleJSONCommand(const JsonDocument &json);
     void setMode(EffectMode mode);
     void updateLength(uint16_t len);
