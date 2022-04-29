@@ -8,6 +8,7 @@
 
 #include "ServerMgr.h"
 #include "PixelController.h"
+#include "config.h"
 #include <LittleFS.h>
 
 static const char notFoundContent[] PROGMEM = 
@@ -55,11 +56,12 @@ R"==(<!doctype html><html lang='en'>
 </body>
 )==";
 
-#define PROJECT_TITLE   "KLights"
 #define BUILD_TIME      __DATE__ " " __TIME__
 
 extern PixelController  gStrip1;
+#ifndef BENCH_TEST
 extern PixelController  gStrip2;
+#endif
 
 class FileServerHandler : public RequestHandler {
 public:
@@ -138,13 +140,17 @@ void ServerMgr::setup() {
             SHSVRec purple(270.0, 1.0, 0.10);
 
             gStrip1.setStatusPixel(purple);
+#ifndef BENCH_TEST
             gStrip2.setStatusPixel(purple);
+#endif
         }
         else {
             SHSVRec purple(270.0, 1.0, (float)progress / (float)len);
 
             gStrip1.setStatusPixel(purple);
+#ifndef BENCH_TEST
             gStrip2.setStatusPixel(purple);
+#endif
         }
     });
 
@@ -198,7 +204,7 @@ void ServerMgr::handleSysInfo() {
     LittleFS.info(fs_info);
 
     result += "{\n";
-    result += "  \"project\": \"" + String(PROJECT_TITLE) + "\",\n";
+    result += "  \"project\": \"" + String(kPROJ_TITLE) + "\",\n";
     result += "  \"buildTime\": \"" + String(BUILD_TIME) + "\",\n";
     result += "  \"versionSDK\": \"" + String(ESP.getSdkVersion()) + "\",\n";
     result += "  \"versionCore\": \"" + ESP.getCoreVersion() + "\",\n";

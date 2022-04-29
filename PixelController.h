@@ -13,14 +13,17 @@
 #include <ArduinoJson.h>    // would prefer to forward declare but something's weird
 
 class PixelController {
+public:
     enum EffectMode {
         none = 0,
         rainbow,
+        sweep,
     };
 
-public:
     PixelController(uint16_t numPixels, int16_t pin = D1);
     ~PixelController();
+
+    static inline float refreshRate() { return 1.0 / 30.0; }
 
     void show();
     void loop();
@@ -34,14 +37,16 @@ public:
     bool canShow(void) {
         uint32_t now = micros();
 
-        if (endTime > now) {
-            endTime = now;
+        if (lastShown > now) {
+            lastShown = now;
         }
 
-        return (now - endTime) >= 300L;
+        return (now - lastShown) >= 300L;
     }
 
 protected:
+    void updateRainbow();
+    void updateSweep();
     void setBaseColor(SHSVRec color);
     void setPixels(uint32_t rgbw);
 
@@ -49,11 +54,12 @@ protected:
     uint16_t    numBytes;   // Size of 'pixels' buffer below
     int16_t     outPin;     // Output pin number (-1 if not yet set)
     SPixelPtr   pixels;     // Holds LED color values (3 or 4 bytes each)
-    uint32_t    endTime;    // Latch timing reference
+    uint32_t    lastShown;  // Latch timing reference
     
     bool        isOn;
     bool        inTransit;
     EffectMode  activeEffect;
+    float       progress;
 
     uint32_t    transStart;
     uint32_t    transDur;

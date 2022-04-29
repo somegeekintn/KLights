@@ -12,7 +12,6 @@
 
 #include <ArduinoJson.h>
 
-#define kMQTT_ENDPOINT  "home/lights/kitchen"
 #define kMQTT_NODE(n)   kMQTT_ENDPOINT n
 
 #define kTIMEZONE       "CST6CDT,M3.2.0/2:00:00,M11.1.0/2:00:00" 
@@ -20,7 +19,9 @@
 
 StaticJsonDocument<256> gJSONDoc;
 extern PixelController  gStrip1;
+#ifndef BENCH_TEST
 extern PixelController  gStrip2;
+#endif
 
 NetworkMgr::NetworkMgr() {
     mqttClient.setClient(wifiClient);
@@ -120,7 +121,6 @@ void NetworkMgr::mqttCallback(char* c_topic, byte* rawPayload, unsigned int leng
             }
             else {
                 gStrip1.handleJSONCommand(gJSONDoc);
-                gStrip2.handleJSONCommand(gJSONDoc);
             }
         }
     }

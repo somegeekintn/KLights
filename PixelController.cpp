@@ -15,7 +15,7 @@ extern "C" IRAM_ATTR void espShow(uint16_t pin, uint8_t *pixels, uint32_t numByt
 PixelController::PixelController(uint16_t numPixels, int16_t pin) {
     outPin = pin;
     pixels = NULL;
-    endTime = 0;
+    lastShown = 0;
     isOn = false;
 
     updateLength(numPixels);
@@ -42,7 +42,7 @@ void PixelController::show() {
         espShow(outPin, (uint8_t *)pixels, numBytes);
         interrupts();
         
-        endTime = micros();
+        lastShown = micros();
     }
 }
 
@@ -55,6 +55,18 @@ void PixelController::loop() {
         setPixels(nextColor);
         if (progress == 1.0) {
             inTransit = false;
+        }
+    }
+    else {
+        switch (activeEffect) {
+            case none:
+                // refresh periodically to allow dis/connected segments to update properly
+                if (micros() > lastShown + (5 * 1000000)) {
+                    show();
+                }
+                break;
+            case rainbow:   updateRainbow(); break;
+            case sweep:     updateSweep(); break;
         }
     }
 }
@@ -103,6 +115,18 @@ void PixelController::handleJSONCommand(const JsonDocument &json) {
     }
 }
 
+void PixelController::setMode(EffectMode inMode) {
+    if (inMode != activeEffect) {
+        activeEffect = inMode;
+
+        switch (activeEffect) {
+            case none:      setBaseColor(baseColor); break;
+            case rainbow:   progress = 0.0; updateRainbow(); break;
+            case sweep:     progress = 0.0; updateSweep(); break;
+        }
+    }
+}
+
 void PixelController::updateLength(uint16_t len) {
     free(pixels);
 
@@ -113,6 +137,38 @@ void PixelController::updateLength(uint16_t len) {
     } else {
         numPixels = numBytes = 0;
     }
+}
+
+void PixelController::updateRainbow() {
+    SHSVRec color(progress, 1.0, 0.25);
+
+    for (int i=1; i<numPixels; i++) {
+        pixels[i].rgbw = ColorUtils::HSVtoPixel(color).rgbw;
+
+        color.hue += 5.0;
+        if (color.hue >=360.0) {
+            color.hue -= 360.0;
+        }
+    }
+    progress += 5.0;
+    if (progress >=360.0) {
+        progress -= 360.0;
+    }
+    show();
+}
+
+void PixelController::updateSweep() {
+    float   val = progress, unused;
+    SHSVRec color(250.0, 1.0, 0.025 + fabs(modf(val, &unused) * 2 - 1) * 0.5);
+
+    for (int i=1; i<numPixels; i++) {
+        pixels[i].rgbw = ColorUtils::HSVtoPixel(color).rgbw;
+
+        val += 0.04;
+        color.val = 0.025 + fabs(modf(val, &unused) * 2 - 1) * 0.5;
+    }
+    progress += (1.0 / (30.0 * 2.0));
+    show();
 }
 
 SHSVRec PixelController::getBaseColor() {
