@@ -58,11 +58,6 @@ R"==(<!doctype html><html lang='en'>
 
 #define BUILD_TIME      __DATE__ " " __TIME__
 
-extern PixelController  gStrip1;
-#ifndef BENCH_TEST
-extern PixelController  gStrip2;
-#endif
-
 class FileServerHandler : public RequestHandler {
 public:
     FileServerHandler() { }
@@ -136,22 +131,15 @@ void ServerMgr::setup() {
     // Note: this required a change to Updater.cpp as writeStream calls the progress handler
     // but not write. Consider creating an HTTP updater that contains its own progress handler
     Update.onProgress([](size_t progress, size_t len) {
-        if (progress == 0) {
-            SHSVRec purple(270.0, 1.0, 0.10);
-
-            gStrip1.setStatusPixel(purple);
-#ifndef BENCH_TEST
-            gStrip2.setStatusPixel(purple);
-#endif
-        }
-        else {
-            SHSVRec purple(270.0, 1.0, (float)progress / (float)len);
-
-            gStrip1.setStatusPixel(purple);
-#ifndef BENCH_TEST
-            gStrip2.setStatusPixel(purple);
-#endif
-        }
+        // progress from Updater is currently broken as it gives the size of the destination
+        // insteaed of the source. we'll just blink the LEDs on each update for now.
+        static bool pToggle = true;
+        SHSVRec color = ColorUtils::setVal(ColorUtils::purple, pToggle ? 0.5 : 0.1);
+        
+        gPixels->setAreaColor(area_status_1, color);
+        gPixels->setAreaColor(area_status_2, color);
+        gPixels->show();
+        pToggle = !pToggle;
     });
 
     // register some REST services

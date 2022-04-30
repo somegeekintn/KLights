@@ -18,10 +18,6 @@
 #define kEPOCH_01012022 1640995200
 
 StaticJsonDocument<256> gJSONDoc;
-extern PixelController  gStrip1;
-#ifndef BENCH_TEST
-extern PixelController  gStrip2;
-#endif
 
 NetworkMgr::NetworkMgr() {
     mqttClient.setClient(wifiClient);
@@ -47,7 +43,8 @@ void NetworkMgr::setupWifi() {
     }
 
     Serial.print(F("\nWiFi connected @ : ")); Serial.println(WiFi.localIP());
-    gStrip1.setStatusPixel(SHSVRec(120.0, 1.0, 0.10));     // green, calls show
+    gPixels->setAreaColor(area_status_1, ColorUtils::setVal(ColorUtils::green, 0.10));
+    gPixels->show();
 }
 
 void NetworkMgr::setupTime() {
@@ -108,8 +105,6 @@ void NetworkMgr::mqttCallback(char* c_topic, byte* rawPayload, unsigned int leng
     String              lightsPath(kMQTT_NODE("/"));
 
     if (topic.startsWith(lightsPath)) {
-        SHSVRec         baseColor = gStrip1.getBaseColor();
-
         topic.remove(0, lightsPath.length());
 
         if (topic == "set") {
@@ -120,7 +115,7 @@ void NetworkMgr::mqttCallback(char* c_topic, byte* rawPayload, unsigned int leng
                 Serial.println(error.f_str());
             }
             else {
-                gStrip1.handleJSONCommand(gJSONDoc);
+                gPixels->handleJSONCommand(gJSONDoc);
             }
         }
     }

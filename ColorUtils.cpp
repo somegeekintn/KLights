@@ -114,4 +114,23 @@ SHSVRec ColorUtils::mix(SHSVRec x, SHSVRec y, float a) {
     return mixed;
 }
 
-SHSVRec ColorUtils::color_black = { 0.0, 0.0, 0.0 };
+SHSVRec ColorUtils::setVal(SHSVRec x, float val) {
+    SHSVRec adj;
+
+    adj.hue = x.hue;
+    adj.sat = x.sat;
+    adj.val = val;
+
+    return adj;
+}
+
+SHSVRec ColorUtils::none   = { 0.0, 0.0, -1.0 };
+SHSVRec ColorUtils::black   = { 0.0, 0.0, 0.0 };
+SHSVRec ColorUtils::white   = { 0.0, 0.0, 1.0 };
+SHSVRec ColorUtils::red     = { 0.0, 1.0, 1.0 };
+SHSVRec ColorUtils::yellow  = { 60.0, 1.0, 1.0 };
+SHSVRec ColorUtils::green   = { 120.0, 1.0, 1.0 };
+SHSVRec ColorUtils::cyan    = { 180.0, 1.0, 1.0 };
+SHSVRec ColorUtils::blue    = { 240.0, 1.0, 1.0 };
+SHSVRec ColorUtils::purple  = { 270.0, 1.0, 1.0 };
+SHSVRec ColorUtils::magenta = { 300.0, 1.0, 1.0 };

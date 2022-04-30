@@ -14,42 +14,55 @@
 #include <Ticker.h>
 
 
-#ifndef BENCH_TEST
-PixelController gStrip1(72, D1);
-PixelController gStrip2(148, D2);
-#else
-PixelController gStrip1(77, D1);    // ~3mS to update
-#endif
-
 Ticker          gTicker;
 NetworkMgr      gNetworkMgr;
+
+void pixelSetup() {
+#ifndef BENCH_TEST
+    PixelController::StripInfoRec  stripInfo[] = { { D2, 148, true }, { D1, 72, false } };
+    PixelController::SectionRec    main[] = { { 0, 147 }, { 149, 71 } };
+
+    gPixels = new PixelController(2, stripInfo);
+    gPixels->defineArea(area_main, 2, main);
+    gPixels->defineArea(area_status_1, 147, 1);
+    gPixels->defineArea(area_status_2, 148, 1);
+#else
+    PixelController::SectionRec    main[] = { { 0, 37 }, { 39, 38 } };
+    PixelController::SectionRec    status1[] = { { 37, 1 } };
+    PixelController::SectionRec    status2[] = { { 38, 1 } };
+
+    gPixels = new PixelController(77, D1);
+    gPixels->defineArea(area_main, 2, main);
+    gPixels->defineArea(area_status_1, 37, 1);
+    gPixels->defineArea(area_status_2, 38, 1);
+#endif
+    gPixels->setAreaColor(area_status_1, ColorUtils::setVal(ColorUtils::red, 0.10));
+    gPixels->setAreaColor(area_status_2, ColorUtils::setVal(ColorUtils::red, 0.10));
+    gPixels->show();
+}
 
 void setup() {
     Serial.begin(115200);
 
+    pixelSetup();
     if (!LittleFS.begin()) {
         Serial.print(F("Failed to mount filesystem (LittleFS)"));
     }
-
-    gStrip1.setStatusPixel(SHSVRec(0.0, 1.0, 0.10));     // red, calls show
-#ifndef BENCH_TEST
-    gStrip2.setStatusPixel(SHSVRec(0.0, 1.0, 0.10));     // red, calls show
-#endif
+    
     gNetworkMgr.setup();
 
     gTicker.attach_scheduled(PixelController::refreshRate(), refresh);
-#ifdef BENCH_TEST
-    gStrip1.setMode(PixelController::EffectMode::sweep);
-#endif
+// #ifdef BENCH_TEST
+//     gStrip1.setMode(PixelController::EffectMode::sweep);
+// #endif
 }
 
 void refresh() {
-    gStrip1.loop();
-#ifndef BENCH_TEST
+    gPixels->loop();
 #warning Todo: add heartbeat indicator    
-#endif
 }
 
 void loop() {
     gNetworkMgr.loop();
 }
+

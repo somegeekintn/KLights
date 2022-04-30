@@ -28,6 +28,8 @@ typedef struct SHSVRec {
 
     SHSVRec() { hue = 0.0; sat = 0.0; val = 0.0; }
     SHSVRec(float inHue, float inSat, float inVal) { hue = inHue; sat = inSat; val = inVal; }
+    
+    bool valid() { return val != -1.0; }
 } SHSVRec;
 
 class ColorUtils {
@@ -37,8 +39,18 @@ public:
     static uint32_t ColorHSV(uint16_t hue, uint8_t sat, uint8_t val);
 
     static SHSVRec mix(SHSVRec x, SHSVRec y, float a);
+    static SHSVRec setVal(SHSVRec x, float val);
 
-    static SHSVRec color_black;
+    static SHSVRec none;
+    static SHSVRec black;
+    static SHSVRec white;
+    static SHSVRec red;
+    static SHSVRec yellow;
+    static SHSVRec green;
+    static SHSVRec cyan;
+    static SHSVRec blue;
+    static SHSVRec purple;
+    static SHSVRec magenta;
 };
 
 #endif

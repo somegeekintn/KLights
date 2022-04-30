@@ -26,9 +26,16 @@
 #define kPROJ_TITLE     "TestLights"
 #define kMQTT_ENDPOINT  "home/lights/test"
 #else
+#undef BENCH_TEST
 #define kMQTT_CLIENT    "klights_mcu"
 #define kPROJ_TITLE     "KLights"
 #define kMQTT_ENDPOINT  "home/lights/kitchen"
 #endif
+
+enum {
+    area_main = 0,
+    area_status_1,
+    area_status_2,
+};
 
 #endif
