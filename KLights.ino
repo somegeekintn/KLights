@@ -11,10 +11,7 @@
 #include "NetworkMgr.h"
 #include "config.h"
 #include <LittleFS.h>
-#include <Ticker.h>
 
-
-Ticker          gTicker;
 NetworkMgr      gNetworkMgr;
 
 void pixelSetup() {
@@ -36,8 +33,8 @@ void pixelSetup() {
     gPixels->defineArea(area_status_1, 37, 1);
     gPixels->defineArea(area_status_2, 38, 1);
 #endif
-    gPixels->setAreaColor(area_status_1, ColorUtils::setVal(ColorUtils::red, 0.10));
-    gPixels->setAreaColor(area_status_2, ColorUtils::setVal(ColorUtils::red, 0.10));
+    gPixels->setAreaColor(area_status_1, ColorUtils::red.withVal(0.10));
+    gPixels->setAreaColor(area_status_2, ColorUtils::red.withVal(0.10));
     gPixels->show();
 }
 
@@ -45,21 +42,12 @@ void setup() {
     Serial.begin(115200);
 
     pixelSetup();
+
     if (!LittleFS.begin()) {
         Serial.print(F("Failed to mount filesystem (LittleFS)"));
     }
     
     gNetworkMgr.setup();
-
-    gTicker.attach_scheduled(PixelController::refreshRate(), refresh);
-// #ifdef BENCH_TEST
-//     gStrip1.setMode(PixelController::EffectMode::sweep);
-// #endif
-}
-
-void refresh() {
-    gPixels->loop();
-#warning Todo: add heartbeat indicator    
 }
 
 void loop() {

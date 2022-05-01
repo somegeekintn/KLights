@@ -134,7 +134,7 @@ void ServerMgr::setup() {
         // progress from Updater is currently broken as it gives the size of the destination
         // insteaed of the source. we'll just blink the LEDs on each update for now.
         static bool pToggle = true;
-        SHSVRec color = ColorUtils::setVal(ColorUtils::purple, pToggle ? 0.5 : 0.1);
+        SHSVRec color = ColorUtils::purple.withVal(pToggle ? 0.5 : 0.1);
         
         gPixels->setAreaColor(area_status_1, color);
         gPixels->setAreaColor(area_status_2, color);
@@ -200,6 +200,7 @@ void ServerMgr::handleSysInfo() {
     result += "  \"versionBoot\": " + String(ESP.getBootVersion()) + ",\n";
     result += "  \"flashSize\": " + String(ESP.getFlashChipSize()) + ",\n";
     result += "  \"freeHeap\": " + String(ESP.getFreeHeap()) + ",\n";
+    result += "  \"heapFrag\": " + String(ESP.getHeapFragmentation()) + ",\n";
     result += "  \"sketchSize\": " + String(ESP.getSketchSize()) + ",\n";
     result += "  \"sketchSpace\": " + String(ESP.getFreeSketchSpace()) + ",\n";
     result += "  \"fsTotalBytes\": " + String(fs_info.totalBytes) + ",\n";

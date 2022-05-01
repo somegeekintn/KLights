@@ -114,16 +114,6 @@ SHSVRec ColorUtils::mix(SHSVRec x, SHSVRec y, float a) {
     return mixed;
 }
 
-SHSVRec ColorUtils::setVal(SHSVRec x, float val) {
-    SHSVRec adj;
-
-    adj.hue = x.hue;
-    adj.sat = x.sat;
-    adj.val = val;
-
-    return adj;
-}
-
 SHSVRec ColorUtils::none   = { 0.0, 0.0, -1.0 };
 SHSVRec ColorUtils::black   = { 0.0, 0.0, 0.0 };
 SHSVRec ColorUtils::white   = { 0.0, 0.0, 1.0 };

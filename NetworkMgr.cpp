@@ -43,7 +43,8 @@ void NetworkMgr::setupWifi() {
     }
 
     Serial.print(F("\nWiFi connected @ : ")); Serial.println(WiFi.localIP());
-    gPixels->setAreaColor(area_status_1, ColorUtils::setVal(ColorUtils::green, 0.10));
+    gPixels->setAreaColor(area_status_1, ColorUtils::green.withVal(0.10));
+    gPixels->setAreaColor(area_status_2, ColorUtils::blue.withVal(0.10));
     gPixels->show();
 }
 

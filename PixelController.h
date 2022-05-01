@@ -11,6 +11,7 @@
 
 #include "ColorUtils.h"
 #include <ArduinoJson.h>
+#include <Ticker.h>
 
 // Note:
 // To future me when I wonder why this seems insane:
@@ -50,6 +51,17 @@
 #define kMAX_PIXEL_AREAS    10
 #define kSTRIP_RESET_DUR    80UL    // Min reset time for SK6812RGBW. Other strips may be different.
 
+class PxlFX;
+
+typedef struct {
+    int16_t     len;
+    uint16_t    *map;
+
+    bool        isOn;
+    SHSVRec     baseColor;
+    PxlFX       *effect;
+} PixelAreaRec, *PixelAreaPtr;
+
 class PixelController {
 public:
     typedef struct StripInfo {
@@ -81,27 +93,29 @@ public:
         int16_t         len;
     } SectionRec, *SectionPtr;
 
-    typedef struct {
-        int16_t     len;
-        uint16_t    *map;
-        bool        isOn;
-        SHSVRec     targetColor;
-    } AreaRec, *AreaPtr;
-
-    PixelController(uint16_t totalPixels, int16_t pin, bool reversed = false);
+    PixelController(uint16_t totalPixels, int16_t pin, bool reversed=false);
     PixelController(uint16_t stripCount, StripInfoPtr stripInfo);
     ~PixelController();
 
-    static inline float refreshRate() { return 1.0 / 30.0; }
+    // show() overhead for:
+    // 300 pixels: 12mS or 36% of our time slice at 30fps.
+    // 220 pixels: 8.8ms or ~26% of our time slice at 30fps.
+    //  80 pixels: 3.2ms which is 9.6% of our time slice at 30fps.
+    // curTick will overflow in about 4.5 years with a rate of 30fps
+    static inline float tickRate() { return 1.0f / 30.0f; }
 
     void defineArea(uint16_t areaID, int16_t offset, int16_t len);
     void defineArea(uint16_t areaID, uint16_t sectionCount, SectionPtr sections);
 
     void show();
-    void loop();
-    
+    void performTick();
+    float tickTime(uint32_t startTick);
+    inline uint32_t getTick() { return curTick; }
+  
     void handleJSONCommand(const JsonDocument &json);
-    void setAreaColor(uint16_t areaID, SHSVRec color, bool isOn = true);
+    void setAreaColor(uint16_t areaID, SHSVRec color, bool isOn=true, float duration=0.0);
+
+    inline void setPixel(uint16_t pixelIdx, SPixelRec pixel) { pixels[pixelIdx] = pixel; }   // not awesome
 
     void dumpInfo();
 
@@ -109,13 +123,16 @@ private:
     void init(uint16_t stripCount, StripInfoPtr stripInfo);
     uint16_t logicalIndexToPixelIndex(uint16_t logicalIdx);
 
-    uint16_t    numPixels;  // aka LEDS but each "pixel" is four LEDs
-    SPixelPtr   pixels;     
+    uint32_t        curTick;
+    Ticker          ticker;
 
-    StripPtr    strips;
-    uint16_t    stripCount;
+    uint16_t        numPixels;  // aka LEDS but each "pixel" is four LEDs
+    SPixelPtr       pixels;     
 
-    AreaRec     areas[kMAX_PIXEL_AREAS];
+    StripPtr        strips;
+    uint16_t        stripCount;
+
+    PixelAreaRec    areas[kMAX_PIXEL_AREAS];
 };
 
 extern PixelController *gPixels;
