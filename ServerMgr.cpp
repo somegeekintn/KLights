@@ -123,8 +123,8 @@ ServerMgr::ServerMgr() {
 void ServerMgr::setup() {
     bootTime = time(NULL);
 
-    server.on("/minup.html", [this]() { this->handleBasicUpload(); });
-    server.on("/", HTTP_GET, [this]() { this->handleRedirect(); });
+    server.on(F("/minup.html"), [this]() { this->handleBasicUpload(); });
+    server.on(F("/"), HTTP_GET, [this]() { this->handleRedirect(); });
 
     // OTA Update handler
     httpUpdater.setup(&server, "/otaupdate");
@@ -143,8 +143,9 @@ void ServerMgr::setup() {
     });
 
     // register some REST services
-    server.on("/$fs", HTTP_GET, [this]() { this->handleFileList(); });
-    server.on("/$sysinfo", HTTP_GET, [this]() { this->handleSysInfo(); });
+    server.on(F("/$fs"), HTTP_GET, [this]() { this->handleFileList(); });
+    server.on(F("/$sysinfo"), HTTP_GET, [this]() { this->handleSysInfo(); });
+    server.on(F("/$effect"), HTTP_GET, [this]() { this->handleEffect(); });
     server.addHandler(new FileServerHandler());
 
     server.serveStatic("/", LittleFS, "/");
@@ -164,53 +165,61 @@ void ServerMgr::loop() {
 }
 
 void ServerMgr::handleFileList() {
-    Dir     dir = LittleFS.openDir("/");
-    String  result;
+    StaticJsonDocument<1024> jsonDoc;
+    Dir         dir = LittleFS.openDir("/");
+    String      result;
+    int16_t     idx = 0;
 
-    result += "[\n";
     while (dir.next()) {
-        if (result.length() > 4) {
-            result += ",";
-        }
-        result += "  {";
-        result += " \"name\": \"" + dir.fileName() + "\", ";
-        result += " \"size\": " + String(dir.fileSize()) + ", ";
-        result += " \"time\": " + String(dir.fileTime());
-        result += " }\n";
+        jsonDoc[idx][F("name")] = dir.fileName();
+        jsonDoc[idx][F("size")] = dir.fileSize();
+        jsonDoc[idx][F("time")] = dir.fileTime();
+        idx++;
     }
-    result += "]";
-    server.sendHeader("Cache-Control", "no-cache");
+
+    serializeJson(jsonDoc, result);
+    server.sendHeader(F("Cache-Control"), F("no-cache"));
     server.send(200, F("application/json; charset=utf-8"), result);
 }
 
 void ServerMgr::handleSysInfo() {
-    String  result;
-    FSInfo  fs_info;
-    time_t  now = time(NULL);
+    StaticJsonDocument<512> jsonDoc;
+    String      result;
+    FSInfo      fs_info;
+    time_t      now = time(NULL);
 
-    
     LittleFS.info(fs_info);
 
-    result += "{\n";
-    result += "  \"project\": \"" + String(kPROJ_TITLE) + "\",\n";
-    result += "  \"buildTime\": \"" + String(BUILD_TIME) + "\",\n";
-    result += "  \"versionSDK\": \"" + String(ESP.getSdkVersion()) + "\",\n";
-    result += "  \"versionCore\": \"" + ESP.getCoreVersion() + "\",\n";
-    result += "  \"versionFull\": \"" + ESP.getFullVersion() + "\",\n";
-    result += "  \"versionBoot\": " + String(ESP.getBootVersion()) + ",\n";
-    result += "  \"flashSize\": " + String(ESP.getFlashChipSize()) + ",\n";
-    result += "  \"freeHeap\": " + String(ESP.getFreeHeap()) + ",\n";
-    result += "  \"heapFrag\": " + String(ESP.getHeapFragmentation()) + ",\n";
-    result += "  \"sketchSize\": " + String(ESP.getSketchSize()) + ",\n";
-    result += "  \"sketchSpace\": " + String(ESP.getFreeSketchSpace()) + ",\n";
-    result += "  \"fsTotalBytes\": " + String(fs_info.totalBytes) + ",\n";
-    result += "  \"fsUsedBytes\": " + String(fs_info.usedBytes) + ",\n";
-    result += "  \"bootTime\": " + String(bootTime) + ",\n";
-    result += "  \"curTime\": " + String(now) + "\n";
-    result += "}";
+    jsonDoc[F("project")] = kPROJ_TITLE;
+    jsonDoc[F("buildTime")] = BUILD_TIME;
+    jsonDoc[F("versionSDK")] = ESP.getSdkVersion();
+    jsonDoc[F("versionCore")] = ESP.getCoreVersion();
+    jsonDoc[F("versionFull")] = ESP.getFullVersion();
+    jsonDoc[F("versionBoot")] = ESP.getBootVersion();
+    jsonDoc[F("flashSize")] = ESP.getFlashChipSize();
+    jsonDoc[F("freeHeap")] = ESP.getFreeHeap();
+    jsonDoc[F("heapFrag")] = ESP.getHeapFragmentation();
+    jsonDoc[F("sketchSize")] = ESP.getSketchSize();
+    jsonDoc[F("sketchSpace")] = ESP.getFreeSketchSpace();
+    jsonDoc[F("fsTotalBytes")] = fs_info.totalBytes;
+    jsonDoc[F("fsUsedBytes")] = fs_info.usedBytes;
+    jsonDoc[F("bootTime")] = bootTime;
+    jsonDoc[F("curTime")] = now;
+    serializeJson(jsonDoc, result);
 
-    server.sendHeader("Cache-Control", "no-cache");
+    server.sendHeader(F("Cache-Control"), F("no-cache"));
     server.send(200, F("application/json; charset=utf-8"), result);
+}
+
+void ServerMgr::handleEffect() {
+    StaticJsonDocument<256> jsonDoc;
+    int                     argCount = server.args();
+
+    for (int i=0; i<argCount; i++) {
+        jsonDoc[server.argName(i)] = server.arg(i);
+    }
+    gPixels->handleWebCommand(jsonDoc);
+    server.send(200, F("application/json; charset=utf-8"), F("{ \"result\": \"ok\" }"));
 }
 
 void ServerMgr::handleBasicUpload() {

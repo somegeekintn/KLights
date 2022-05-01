@@ -23,6 +23,7 @@ void pixelSetup() {
     gPixels->defineArea(area_main, 2, main);
     gPixels->defineArea(area_status_1, 147, 1);
     gPixels->defineArea(area_status_2, 148, 1);
+    gPixels->defineArea(area_coffee, 103, 44);
 #else
     PixelController::SectionRec    main[] = { { 0, 37 }, { 39, 38 } };
     PixelController::SectionRec    status1[] = { { 37, 1 } };

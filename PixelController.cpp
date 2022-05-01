@@ -9,6 +9,7 @@
 
 #include "PixelController.h"
 #include "PxlFX.h"
+#include "PxlFX_Rainbow.h"
 
 // ESP8266 show() is external to enforce ICACHE_RAM_ATTR execution
 extern "C" IRAM_ATTR void espShow(uint16_t pin, uint8_t *pixels, uint32_t numBytes);
@@ -173,7 +174,18 @@ float PixelController::tickTime(uint32_t startTick) {
     return (float)(curTick - startTick) * tickRate();
 }
 
-void PixelController::handleJSONCommand(const JsonDocument &json) {
+void PixelController::handleWebCommand(const JsonDocument &json) {
+    String  effectName = json["name"];
+    int     area = json["area"];
+
+    if (effectName == "rainbow") {
+        PxlFX   *rainbow = new PxlFX_Rainbow(gPixels, json);
+
+        gPixels->setAreaEffect(area, rainbow);
+    }
+}
+
+void PixelController::handleMQTTCommand(const JsonDocument &json) {
     PixelAreaPtr mainArea = &areas[0];
 
     if (mainArea->len > 0) {
@@ -204,25 +216,38 @@ void PixelController::handleJSONCommand(const JsonDocument &json) {
     }
 }
 
-void PixelController::setAreaColor(uint16_t areaID, SHSVRec color, bool isOn, float duration) {
+void PixelController::setAreaEffect(uint16_t areaID, PxlFX *effect) {
     PixelAreaPtr     area = &areas[areaID];
 
-    if (area->map != NULL) {
+    if (area->map != NULL && area->len > 0) {
         if (area->effect != nullptr) {
             delete area->effect;
             area->effect = nullptr;
         }
+
+        effect->setArea(area);
+        area->effect = effect;
+    }
+}
+
+void PixelController::setAreaColor(uint16_t areaID, SHSVRec color, bool isOn, float duration) {
+    PixelAreaPtr     area = &areas[areaID];
+
+    if (area->map != NULL) {
+        PxlFX   *effect;
 
         if (duration > 0.0) {
             SHSVRec offColor = area->baseColor.withVal(0.0);
             SHSVRec startColor = area->isOn ? area->baseColor : offColor;
             SHSVRec endColor = isOn ? color : offColor;
             
-            area->effect = new PxlFX_Transition(this, area, startColor, endColor, duration);
+            effect = new PxlFX_Transition(this, startColor, endColor, duration);
         }
         else {
-            area->effect = new PxlFX_Transition(this, area, isOn ? color : ColorUtils::black);
+            effect = new PxlFX_Transition(this, isOn ? color : ColorUtils::black);
         }
+        
+        setAreaEffect(areaID, effect);
         area->baseColor = color;
         area->isOn = isOn;
     }
@@ -251,25 +276,6 @@ void PixelController::dumpInfo() {
         Serial.printf("%08x\n", pixels[i].rgbw);
     }
 }
-
-
-// void PixelController::updateRainbow() {
-//     SHSVRec color(progress, 1.0, 0.25);
-
-//     for (int i=1; i<numPixels; i++) {
-//         pixels[i].rgbw = ColorUtils::HSVtoPixel(color).rgbw;
-
-//         color.hue += 5.0;
-//         if (color.hue >=360.0) {
-//             color.hue -= 360.0;
-//         }
-//     }
-//     progress += 5.0;
-//     if (progress >=360.0) {
-//         progress -= 360.0;
-//     }
-//     show();
-// }
 
 // void PixelController::updateSweep() {
 //     float   val = progress, unused;

@@ -112,7 +112,9 @@ public:
     float tickTime(uint32_t startTick);
     inline uint32_t getTick() { return curTick; }
   
-    void handleJSONCommand(const JsonDocument &json);
+    void handleWebCommand(const JsonDocument &json);
+    void handleMQTTCommand(const JsonDocument &json);
+    void setAreaEffect(uint16_t areaID, PxlFX *effect);
     void setAreaColor(uint16_t areaID, SHSVRec color, bool isOn=true, float duration=0.0);
 
     inline void setPixel(uint16_t pixelIdx, SPixelRec pixel) { pixels[pixelIdx] = pixel; }   // not awesome

@@ -22,13 +22,21 @@
         </div>
 
         <div class="content">
-            <div>System Info</div>
+            <h4>System Info:</h4>
             <div id="sysinfo" class="mono"></div>
-            <div>Rest Services:</div>
+            <h4>Rest Services:</h4>
             <ul>
                 <li><a href="/$sysinfo">/$sysinfo</a> - Some system level information</a></li>
                 <li><a href="/$fs">/$fs</a> - Array of all files</a></li>
             </ul>
+            <h4>Effects:</h4>
+            <div class="effect-container">
+                <button class="button-effect" id="rainbow-button" type="button">Rainbow</button>
+                <label for="rainbow-rate">Rate: </label><input type="text" id="rainbow-rate" name="rate" value="360.0">
+                <label for="rainbow-width">Width: </label><input type="text" id="rainbow-width" name="width" value="32.0">
+                <label for="rainbow-area">Area: </label><input type="text" id="rainbow-area" name="area" value="0">
+            </div>
+            
         </div>
     </div>
 
@@ -57,6 +65,22 @@
                     window.alert(err);
                 });
         });
+
+        document.getElementById('rainbow-button').addEventListener('click',
+            function (e) {
+                var url = new URL("$effect", window.location.href);
+
+                url.searchParams.append("name", "rainbow");
+                url.searchParams.append("rate", document.getElementById('rainbow-rate').value);
+                url.searchParams.append("width", document.getElementById('rainbow-width').value);
+                url.searchParams.append("area", document.getElementById('rainbow-area').value);
+                fetch(url)
+                    .then(function(response) {
+                        console.log(response);
+                    })
+
+            }
+        )
     </script>
     </body>
 </html>

@@ -8,27 +8,39 @@
 
 #include "PxlFX.h"
 
-PxlFX::PxlFX(PixelController *inController, PixelAreaRec *inArea) {
+PxlFX::PxlFX(PixelController *inController) {
     controller = inController;
-    area = inArea;
+    area = nullptr;
     startTick = inController->getTick();
 }
 
-PxlFX_Transition::PxlFX_Transition(PixelController *inController, PixelAreaRec *inArea, SHSVRec inTo)
-    : PxlFX(inController, inArea) {
+void PxlFX::setArea(PixelAreaRec *inArea) {
+    area = inArea;
+}
+
+bool PxlFX::update() {
+    bool finished = true;
+
+    if (area != nullptr) {
+        finished = safeUpdate();
+    }
+
+    return finished;
+}
+
+PxlFX_Transition::PxlFX_Transition(PixelController *inController, SHSVRec inTo) : PxlFX(inController) {
     // This version of the consutructor assumes an immediate change to target color
     duration = 0.0;
     toColor = inTo;
 }
 
-PxlFX_Transition::PxlFX_Transition(PixelController *inController, PixelAreaRec *inArea, SHSVRec inFrom, SHSVRec inTo, float inDur) 
-    : PxlFX(inController, inArea) {
+PxlFX_Transition::PxlFX_Transition(PixelController *inController, SHSVRec inFrom, SHSVRec inTo, float inDur) : PxlFX(inController) {
     duration = inDur;
     fromColor = inFrom;
     toColor = inTo;
 }
 
-bool PxlFX_Transition::update() {
+bool PxlFX_Transition::safeUpdate() {
     SPixelRec   pixel;
     uint16_t    *mapIdx = area->map;
     bool        complete = false;

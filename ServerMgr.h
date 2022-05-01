@@ -23,6 +23,7 @@ public:
 protected:
     void handleFileList();
     void handleSysInfo();
+    void handleEffect();
     void handleBasicUpload();
     void handleRedirect();
     void handleNotFound();

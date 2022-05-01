@@ -17,8 +17,6 @@
 #define kTIMEZONE       "CST6CDT,M3.2.0/2:00:00,M11.1.0/2:00:00" 
 #define kEPOCH_01012022 1640995200
 
-StaticJsonDocument<256> gJSONDoc;
-
 NetworkMgr::NetworkMgr() {
     mqttClient.setClient(wifiClient);
 }
@@ -106,17 +104,19 @@ void NetworkMgr::mqttCallback(char* c_topic, byte* rawPayload, unsigned int leng
     String              lightsPath(kMQTT_NODE("/"));
 
     if (topic.startsWith(lightsPath)) {
+        StaticJsonDocument<256> jsonDoc;
+
         topic.remove(0, lightsPath.length());
 
         if (topic == "set") {
-            DeserializationError error = deserializeJson(gJSONDoc, rawPayload, length);
+            DeserializationError error = deserializeJson(jsonDoc, rawPayload, length);
 
             if (error) {
                 Serial.print(F("deserializeJson() failed: "));
                 Serial.println(error.f_str());
             }
             else {
-                gPixels->handleJSONCommand(gJSONDoc);
+                gPixels->handleMQTTCommand(jsonDoc);
             }
         }
     }

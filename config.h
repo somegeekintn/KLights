@@ -36,6 +36,7 @@ enum {
     area_main = 0,
     area_status_1,
     area_status_2,
+    area_coffee,
 };
 
 #endif

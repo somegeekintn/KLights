@@ -15,6 +15,15 @@ p {
     margin: 16px 0;
 }
 
+h1, h2, h3, h4 {
+    margin-top: 10px;
+    margin-bottom: 4px;
+}
+
+label {
+	padding: 0 0.4em;
+}
+
 progress {
 	display: block;
 	width: 100%;
@@ -114,6 +123,21 @@ progress::-webkit-progress-value {
 
 .form-container {
     min-width: 380px;
+}
+
+.effect-container {
+	display: flex;
+	align-items: center;
+}
+
+.button-effect {
+	background: #bbb;
+	font-weight: bold;
+	color: #111;
+	border-radius: 4px;
+	border: 1px solid #000;
+	padding: 0.5em;
+	margin: 0.5em;
 }
 
 .button-send {

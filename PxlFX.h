@@ -14,9 +14,12 @@
 
 class PxlFX {
 public:
-    PxlFX(PixelController *inController, PixelAreaRec *inArea);
+    PxlFX(PixelController *inController);
 
-    virtual bool update() = 0;  // return true upon completion
+    void setArea(PixelAreaRec *inArea);
+
+    bool update();
+    virtual bool safeUpdate() = 0;  // return true upon completion
 
 protected:
     PixelController *controller;
@@ -26,10 +29,10 @@ protected:
 
 class PxlFX_Transition : public PxlFX {
 public:
-    PxlFX_Transition(PixelController *inController, PixelAreaRec *inArea, SHSVRec inTo);
-    PxlFX_Transition(PixelController *inController, PixelAreaRec *inArea, SHSVRec inFrom, SHSVRec inTo, float inDur=0.0);
+    PxlFX_Transition(PixelController *inController, SHSVRec inTo);
+    PxlFX_Transition(PixelController *inController, SHSVRec inFrom, SHSVRec inTo, float inDur=0.0);
     
-    bool update();
+    bool safeUpdate();
 
 private:
     float       duration;
