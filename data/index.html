@@ -32,11 +32,16 @@
             <h4>Effects:</h4>
             <div class="effect-container">
                 <button class="button-effect" id="rainbow-button" type="button">Rainbow</button>
-                <label for="rainbow-rate">Rate: </label><input type="text" id="rainbow-rate" name="rate" value="360.0">
+                <label for="rainbow-rate">Rate: </label><input type="text" id="rainbow-rate" name="rate" value="2.0">
                 <label for="rainbow-width">Width: </label><input type="text" id="rainbow-width" name="width" value="32.0">
                 <label for="rainbow-area">Area: </label><input type="text" id="rainbow-area" name="area" value="0">
             </div>
-            
+            <div class="effect-container">
+                <button class="button-effect" id="wave-button" type="button">Wave</button>
+                <label for="wave-rate">Rate: </label><input type="text" id="wave-rate" name="rate" value="2.0">
+                <label for="wave-width">Width: </label><input type="text" id="wave-width" name="width" value="32.0">
+                <label for="wave-area">Area: </label><input type="text" id="wave-area" name="area" value="0">
+            </div>
         </div>
     </div>
 
@@ -75,12 +80,19 @@
                 url.searchParams.append("width", document.getElementById('rainbow-width').value);
                 url.searchParams.append("area", document.getElementById('rainbow-area').value);
                 fetch(url)
-                    .then(function(response) {
-                        console.log(response);
-                    })
+            });
+            
+            document.getElementById('wave-button').addEventListener('click',
+            function (e) {
+                var url = new URL("$effect", window.location.href);
 
-            }
-        )
+                url.searchParams.append("name", "wave");
+                url.searchParams.append("rate", document.getElementById('wave-rate').value);
+                url.searchParams.append("width", document.getElementById('wave-width').value);
+                url.searchParams.append("area", document.getElementById('wave-area').value);
+                fetch(url)
+            });
+            
     </script>
     </body>
 </html>

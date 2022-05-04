@@ -20,8 +20,8 @@ public:
 
 private:
     float       startAngle;
-    float       width;
-    float       degreesPerS;
+    float       rate;           // how long for pattern to move through a point
+    float       width;          // how many LEDs wide
     float       duration;
 };
 

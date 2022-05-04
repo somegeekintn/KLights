@@ -16,7 +16,7 @@ class PxlFX {
 public:
     PxlFX(PixelController *inController);
 
-    void setArea(PixelAreaRec *inArea);
+    virtual void setArea(PixelAreaRec *inArea);
 
     bool update();
     virtual bool safeUpdate() = 0;  // return true upon completion

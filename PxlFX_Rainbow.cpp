@@ -9,14 +9,14 @@
 #include "PxlFX_Rainbow.h"
 
 PxlFX_Rainbow::PxlFX_Rainbow(PixelController *inController, float inRate, float inWidth, float inDur) : PxlFX(inController) {
-    degreesPerS = inRate;
+    rate = inRate;
     width = inWidth;
     duration = inDur;
     startAngle = 0.0;
 }
 
 PxlFX_Rainbow::PxlFX_Rainbow(PixelController *inController, const JsonDocument &json) : PxlFX(inController) {
-    degreesPerS = json["rate"];
+    rate = json["rate"];
     width = json["width"];
     duration = 0.0;
     startAngle = 0.0;
@@ -25,7 +25,7 @@ PxlFX_Rainbow::PxlFX_Rainbow(PixelController *inController, const JsonDocument &
 bool PxlFX_Rainbow::safeUpdate() {
     bool        complete = true;
 
-    if (degreesPerS != 0.0 && width > 0.0) {
+    if (rate != 0.0 && width > 0.0) {
         SHSVRec     color(startAngle, 1.0, 1.0);
         float       sweepInc = 360.0 / width;
         uint16_t    *mapIdx = area->map;
@@ -42,7 +42,7 @@ bool PxlFX_Rainbow::safeUpdate() {
             }
         }
         
-        startAngle += degreesPerS * controller->tickRate();
+        startAngle += (360.0 / rate) * controller->tickRate();
         if (startAngle >= 360.0) {
             startAngle -= 360.0;
         }

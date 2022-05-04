@@ -10,6 +10,7 @@
 #include "PixelController.h"
 #include "PxlFX.h"
 #include "PxlFX_Rainbow.h"
+#include "PxlFX_Wave.h"
 
 // ESP8266 show() is external to enforce ICACHE_RAM_ATTR execution
 extern "C" IRAM_ATTR void espShow(uint16_t pin, uint8_t *pixels, uint32_t numBytes);
@@ -147,9 +148,15 @@ void PixelController::show() {
     }
 }
 
+#define SHOW_TICK_TIME 0
+
 void PixelController::performTick() {
     PixelAreaPtr    area = areas;
     bool            needsShow = false;
+#if SHOW_TICK_TIME == 1
+    static uint32_t avgTime = 0;
+    uint32_t        start = micros();
+#endif
 
     for (int aIdx=0; aIdx<kMAX_PIXEL_AREAS; aIdx++, area++) {
         PxlFX   *effect = area->effect;
@@ -163,6 +170,15 @@ void PixelController::performTick() {
         }
     }
 
+#if SHOW_TICK_TIME == 1
+    uint32_t time = micros() - start;
+    avgTime = (avgTime / 8) * 7 + time / 8;
+
+    if (!(getTick() % (5 * 30))) {
+        Serial.printf("t %dµS, a %duS\n", time, avgTime);
+    }
+#endif
+
     if (needsShow) {
         show();
     }
@@ -175,13 +191,15 @@ float PixelController::tickTime(uint32_t startTick) {
 }
 
 void PixelController::handleWebCommand(const JsonDocument &json) {
+    PxlFX   *newEffect = NULL;
     String  effectName = json["name"];
     int     area = json["area"];
 
-    if (effectName == "rainbow") {
-        PxlFX   *rainbow = new PxlFX_Rainbow(gPixels, json);
+    if (effectName == "rainbow")    { newEffect = new PxlFX_Rainbow(gPixels, json); }
+    else if (effectName == "wave")  { newEffect = new PxlFX_Wave(gPixels, json); }
 
-        gPixels->setAreaEffect(area, rainbow);
+    if (newEffect != NULL) {
+        gPixels->setAreaEffect(area, newEffect);
     }
 }
 
@@ -276,41 +294,3 @@ void PixelController::dumpInfo() {
         Serial.printf("%08x\n", pixels[i].rgbw);
     }
 }
-
-// void PixelController::updateSweep() {
-//     float   val = progress, unused;
-//     SHSVRec color(250.0, 1.0, 0.0);
-
-//     for (int i=1; i<numPixels; i++) {
-//         color.val = 0.025 + fabs(modf(val, &unused) * 2 - 1) * 0.5;
-//         pixels[i].rgbw = ColorUtils::HSVtoPixel(color).rgbw;
-//         val += 0.04;
-//     }
-//     progress += (1.0 / (30.0 * 2.0));
-//     show();
-// }
-
-// void PixelController::updateSweep() {
-//     bool    useSine = (time(NULL) / 5) % 2;
-//     float   val = progress, unused;
-//     float   step = 0.039;
-//     SHSVRec color(250.0, 1.0, 0.0);
-
-//     if (useSine) {  // Sine
-//         for (int i=1; i<numPixels; i++) {
-//             color.val = (sinf((val + 0.25) * M_TWOPI) + 1.0) * 0.25;    // 0.0 - 0.5
-//             pixels[i].rgbw = ColorUtils::HSVtoPixel(color).rgbw;
-//             val += step;
-//         }
-//     }
-//     else {          // Triangle
-//         for (int i=1; i<numPixels; i++) {
-//             color.val = fabs(modf(val, &unused) * 2 - 1) * 0.5;         // 0.0 - 0.5
-//             pixels[i].rgbw = ColorUtils::HSVtoPixel(color).rgbw;
-//             val += step;
-//         }
-//     }
-
-//     progress += (1.0 / (30.0 * 2.5));
-//     show();
-// }
