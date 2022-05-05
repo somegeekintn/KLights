@@ -58,6 +58,7 @@ typedef struct {
     uint16_t    *map;
 
     bool        isOn;
+    bool        dirtyState;
     SHSVRec     baseColor;
     PxlFX       *effect;
 } PixelAreaRec, *PixelAreaPtr;
@@ -112,6 +113,9 @@ public:
     float tickTime(uint32_t startTick);
     inline uint32_t getTick() { return curTick; }
   
+    void resetArea(uint16_t areaID);
+    void recordState(uint16_t areaID, Print &output);
+    bool getUpdatedState(uint16_t areaID, Print &output);
     void handleWebCommand(const JsonDocument &json);
     void handleMQTTCommand(const JsonDocument &json);
     void setAreaEffect(uint16_t areaID, PxlFX *effect);

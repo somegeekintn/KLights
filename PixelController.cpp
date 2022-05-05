@@ -190,6 +190,37 @@ float PixelController::tickTime(uint32_t startTick) {
     return (float)(curTick - startTick) * tickRate();
 }
 
+void PixelController::resetArea(uint16_t areaID) {
+    setAreaColor(areaID, ColorUtils::white.withVal(0.50), false);
+}
+
+void PixelController::recordState(uint16_t areaID, Print &output) {
+    StaticJsonDocument<256> jsonDoc;
+    PixelAreaPtr            area = &areas[areaID];
+
+    jsonDoc[F("state")] = area->isOn ? "ON" : "OFF";
+    jsonDoc[F("brightness")] = (int)(area->baseColor.val * 100);
+    jsonDoc[F("color_mode")] = "hs";
+    jsonDoc[F("effect")] = "none";   // for now
+    jsonDoc[F("color")]["h"] = area->baseColor.hue;
+    jsonDoc[F("color")]["s"] = area->baseColor.sat * 100.0;
+    serializeJson(jsonDoc, output);
+}
+
+bool PixelController::getUpdatedState(uint16_t areaID, Print &output) {
+    PixelAreaPtr    areaP = &areas[areaID];
+    bool            wasUpdated = false;
+
+    if (areaP->dirtyState) {
+        areaP->dirtyState = false;
+        wasUpdated = true;
+
+        recordState(areaID, output);
+    }
+
+    return wasUpdated;
+}
+
 void PixelController::handleWebCommand(const JsonDocument &json) {
     PxlFX   *newEffect = NULL;
     String  effectName = json["name"];
@@ -245,6 +276,7 @@ void PixelController::setAreaEffect(uint16_t areaID, PxlFX *effect) {
 
         effect->setArea(area);
         area->effect = effect;
+        area->dirtyState = true;
     }
 }
 

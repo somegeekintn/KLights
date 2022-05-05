@@ -30,11 +30,15 @@ protected:
 
     void mqttReconnect();
 
-    static void mqttCallback(char* c_topic, byte* rawPayload, unsigned int length);
+    void beginMQTTMonitor();
+    void mqttRestore(char* c_topic, byte* rawPayload, unsigned int length);
+    void mqttMonitor(char* c_topic, byte* rawPayload, unsigned int length);
 
     WiFiClient              wifiClient;
     PubSubClient            mqttClient;
     ServerMgr               webServer;
+    uint32_t                mqttConnectTime;
+    bool                    awaitRestore;
 };
 
 #endif

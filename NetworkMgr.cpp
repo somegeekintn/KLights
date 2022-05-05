@@ -12,13 +12,16 @@
 
 #include <ArduinoJson.h>
 
-#define kMQTT_NODE(n)   kMQTT_ENDPOINT n
+#define kMQTT_NODE(n)           kMQTT_ENDPOINT n
+#define kMQTT_RESTORE_TIMEOUT   2000
 
-#define kTIMEZONE       "CST6CDT,M3.2.0/2:00:00,M11.1.0/2:00:00" 
-#define kEPOCH_01012022 1640995200
+#define kTIMEZONE               "CST6CDT,M3.2.0/2:00:00,M11.1.0/2:00:00" 
+#define kEPOCH_01012022         1640995200
 
 NetworkMgr::NetworkMgr() {
     mqttClient.setClient(wifiClient);
+
+    awaitRestore = true;
 }
 
 void NetworkMgr::setup() {
@@ -68,19 +71,35 @@ void NetworkMgr::setupTime() {
 
 void NetworkMgr::setupMQTT() {
     mqttClient.setServer(kMQTT_SERVER, 1883);
-    mqttClient.setCallback(NetworkMgr::mqttCallback);
+    mqttClient.setCallback([this](char *c_topic, uint8_t *rawPayload, unsigned int length) {
+        this->mqttRestore(c_topic, rawPayload, length);
+    });
 }
 
 void NetworkMgr::loop() {
-    loopMQTT();
+    StreamString    jsonStr;
 
+    loopMQTT();
     webServer.loop();
+
+    if (gPixels->getUpdatedState(area_main, jsonStr)) {
+        mqttClient.publish(kMQTT_ENDPOINT, jsonStr.c_str(), true);
+        // PubSubClient::beginPublish / endPublish appears not to work as expected
+    }
 }
 
 void NetworkMgr::loopMQTT() {
     if (!mqttClient.connected()) {
         mqttReconnect();
     }
+    else if (awaitRestore && millis() - mqttConnectTime > kMQTT_RESTORE_TIMEOUT) {
+        Serial.println(F("Failed to restore state. Reset lights."));
+
+        awaitRestore = false;
+        gPixels->resetArea(area_main);   // Off, 50% white
+        beginMQTTMonitor();
+    }
+
     mqttClient.loop();
 }
 
@@ -90,8 +109,8 @@ void NetworkMgr::mqttReconnect() {
 
         if (mqttClient.connect(kMQTT_CLIENT, kMQTT_USER, kMQTT_PASS, kMQTT_NODE("/avail"), 2, false, "offline")) {
             Serial.print(F(" connected to: ")); Serial.println(kMQTT_ENDPOINT);
-            mqttClient.publish(kMQTT_NODE("/avail"), "online", true);
-            mqttClient.subscribe(kMQTT_NODE("/#"));
+            mqttConnectTime = millis();
+            mqttClient.subscribe(kMQTT_ENDPOINT);
         } else {
             Serial.println(String(F("failed, rc=") + String(mqttClient.state()) + F(" try again in 5 seconds")));
 
@@ -99,7 +118,42 @@ void NetworkMgr::mqttReconnect() {
         }
     }
 }
-void NetworkMgr::mqttCallback(char* c_topic, byte* rawPayload, unsigned int length) {
+
+void NetworkMgr::beginMQTTMonitor() {
+    StreamString    jsonStr;
+
+    mqttClient.unsubscribe(kMQTT_ENDPOINT);
+    mqttClient.setCallback([this](char *c_topic, uint8_t *rawPayload, unsigned int length) {
+        this->mqttMonitor(c_topic, rawPayload, length);
+    });
+
+    mqttClient.publish(kMQTT_NODE("/avail"), "online", true);
+    mqttClient.subscribe(kMQTT_NODE("/#"));
+}
+
+void NetworkMgr::mqttRestore(char* c_topic, byte* rawPayload, unsigned int length) {
+    String              topic(c_topic);
+
+    if (topic.equals(kMQTT_ENDPOINT)) {
+        StaticJsonDocument<256> jsonDoc;
+        DeserializationError    error = deserializeJson(jsonDoc, rawPayload, length);
+
+        Serial.println(F("LED state restore..."));
+        if (error) {
+            Serial.print(F("deserializeJson() failed: "));
+            Serial.println(error.f_str());
+        }
+        else {
+            gPixels->handleMQTTCommand(jsonDoc);
+        }
+        Serial.println(F("Begin MQTT monitoring"));
+
+        awaitRestore = false;
+        beginMQTTMonitor();
+    }
+}
+
+void NetworkMgr::mqttMonitor(char* c_topic, byte* rawPayload, unsigned int length) {
     String              topic(c_topic);
     String              lightsPath(kMQTT_NODE("/"));
 
