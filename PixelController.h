@@ -123,6 +123,7 @@ public:
 
     inline void setPixel(uint16_t pixelIdx, SPixelRec pixel) { pixels[pixelIdx] = pixel; }   // not awesome
 
+    void beginStressTest();
     void dumpInfo();
 
 private:

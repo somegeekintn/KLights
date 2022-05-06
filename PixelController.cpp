@@ -71,7 +71,8 @@ void PixelController::init(uint16_t stripCount, StripInfoPtr stripInfo) {
     // Reset areas
     for (int aIdx=0; aIdx<kMAX_PIXEL_AREAS; aIdx++) {
         areas[aIdx].len = 0;
-        areas[aIdx].map = NULL;
+        areas[aIdx].map = nullptr;
+        areas[aIdx].effect = nullptr;
     }
 
     // If scheduled with attach_scheduled, tick can starve during setup, updating, etc.
@@ -155,6 +156,8 @@ void PixelController::performTick() {
     bool            needsShow = false;
 #if SHOW_TICK_TIME == 1
     static uint32_t avgTime = 0;
+    static uint32_t avgInterval = 0;
+    static uint32_t lastStart = 0;
     uint32_t        start = micros();
 #endif
 
@@ -164,19 +167,23 @@ void PixelController::performTick() {
         if (area->len > 0 && effect != nullptr) {
             needsShow = true;
             if (effect->update()) {
-                delete effect;
                 area->effect = nullptr;
+                delete effect;
             }
         }
     }
 
 #if SHOW_TICK_TIME == 1
     uint32_t time = micros() - start;
+    uint32_t interval = start - lastStart;
+
     avgTime = (avgTime / 8) * 7 + time / 8;
+    avgInterval = (avgInterval / 8) * 7 + interval / 8;
 
     if (!(getTick() % (5 * 30))) {
-        Serial.printf("t %dµS, a %duS\n", time, avgTime);
+        Serial.printf("t %dµS, avg %duS | i %dµS, avg %dµS\n", time, avgTime, interval, avgInterval);
     }
+    lastStart = start;
 #endif
 
     if (needsShow) {
@@ -269,9 +276,11 @@ void PixelController::setAreaEffect(uint16_t areaID, PxlFX *effect) {
     PixelAreaPtr     area = &areas[areaID];
 
     if (area->map != NULL && area->len > 0) {
-        if (area->effect != nullptr) {
-            delete area->effect;
+        PxlFX   *oldEffect = area->effect;
+
+        if (oldEffect != nullptr) {
             area->effect = nullptr;
+            delete oldEffect;
         }
 
         effect->setArea(area);
@@ -303,6 +312,36 @@ void PixelController::setAreaColor(uint16_t areaID, SHSVRec color, bool isOn, fl
     }
 }
 
+void PixelController::beginStressTest() {
+    struct StressStuff {
+        Ticker  *stressTicker;
+        float   stressAngle;
+        int     stressCount;
+    };
+    StressStuff *stuff = (StressStuff *)malloc(sizeof(StressStuff));
+
+    stuff->stressTicker = new Ticker();
+    stuff->stressAngle = 0.0;
+    stuff->stressCount = 0;
+    
+    stuff->stressTicker->attach_scheduled(0.33, [this, stuff] {
+        if (!(stuff->stressCount % 2)) {
+            this->setAreaColor(0, SHSVRec(stuff->stressAngle, 1.0, 0.4), true);
+            stuff->stressAngle += 15.0;
+            if (stuff->stressAngle >= 360.0) {
+                stuff->stressAngle -= 360.0;
+            }
+        }
+        else {
+            PxlFX_Wave  *waveEffect = new PxlFX_Wave(this, 0.5, 18.0);
+
+            this->setAreaEffect(0, waveEffect);
+        }
+        
+        stuff->stressCount++;
+    });
+}
+
 void PixelController::dumpInfo() {
     Serial.printf("%d strips\n", stripCount);
     for (int i=0; i<stripCount; i++) {
@@ -321,7 +360,7 @@ void PixelController::dumpInfo() {
         }
     }
 
-    Serial.println("Pixels:");
+    Serial.println(F("Pixels:"));
     for (int i=0; i<numPixels; i++) {
         Serial.printf("%08x\n", pixels[i].rgbw);
     }
