@@ -42,6 +42,12 @@
                 <label for="wave-width">Width: </label><input type="text" id="wave-width" name="width" value="32.0">
                 <label for="wave-area">Area: </label><input type="text" id="wave-area" name="area" value="0">
             </div>
+            <div class="effect-container">
+                <button class="button-effect" id="cylon-button" type="button">Cylon</button>
+                <label for="cylon-rate">Rate: </label><input type="text" id="cylon-rate" name="rate" value="2.0">
+                <label for="cylon-width">Width: </label><input type="text" id="cylon-width" name="width" value="32.0">
+                <label for="cylon-area">Area: </label><input type="text" id="cylon-area" name="area" value="0">
+            </div>
         </div>
     </div>
 
@@ -92,7 +98,17 @@
                 url.searchParams.append("area", document.getElementById('wave-area').value);
                 fetch(url)
             });
-            
+
+            document.getElementById('cylon-button').addEventListener('click',
+            function (e) {
+                var url = new URL("$effect", window.location.href);
+
+                url.searchParams.append("name", "cylon");
+                url.searchParams.append("rate", document.getElementById('cylon-rate').value);
+                url.searchParams.append("width", document.getElementById('cylon-width').value);
+                url.searchParams.append("area", document.getElementById('cylon-area').value);
+                fetch(url)
+            });            
     </script>
     </body>
 </html>

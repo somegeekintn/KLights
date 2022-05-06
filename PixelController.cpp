@@ -11,6 +11,7 @@
 #include "PxlFX.h"
 #include "PxlFX_Rainbow.h"
 #include "PxlFX_Wave.h"
+#include "PxlFX_Cylon.h"
 
 // ESP8266 show() is external to enforce ICACHE_RAM_ATTR execution
 extern "C" IRAM_ATTR void espShow(uint16_t pin, uint8_t *pixels, uint32_t numBytes);
@@ -235,6 +236,7 @@ void PixelController::handleWebCommand(const JsonDocument &json) {
 
     if (effectName == "rainbow")    { newEffect = new PxlFX_Rainbow(gPixels, json); }
     else if (effectName == "wave")  { newEffect = new PxlFX_Wave(gPixels, json); }
+    else if (effectName == "cylon")  { newEffect = new PxlFX_Cylon(gPixels, json); }
 
     if (newEffect != NULL) {
         gPixels->setAreaEffect(area, newEffect);
